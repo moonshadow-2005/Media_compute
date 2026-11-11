@@ -3,3 +3,4 @@ __pycache__/
 .venv/
 *.pyc
 AI_LOG.md
+COMMIT_LOG.md
