@@ -1,0 +1,19 @@
+{
+  "lambdas": [
+    0.005,
+    0.02,
+    0.08
+  ],
+  "kappas": [
+    1.5,
+    2.0
+  ],
+  "beta_max": 100000.0,
+  "python": "3.10.12",
+  "numpy": "2.2.4",
+  "pillow": "11.3.0",
+  "input_dir": "data/illustrations",
+  "random_seed": null,
+  "input_source": "本项目用 NumPy 几何图案生成的三幅原创插画；无外部图片。",
+  "metrics_domain": "平滑结果采用裁剪前的浮点值；PNG 显示结果裁剪到 [0,1]。"
+}
