@@ -26,7 +26,7 @@ https://doi.org/10.1145/2024156.2024208 。
 - [x] 4.1.1 结构平滑与参数控制：核心算法、三组插画、三档 lambda 和两档 kappa 实验已完成。
 - [x] 4.1.2 完整程序与结果复现：8 位灰度／彩色图片载入、保存及运行包复现。
 - [x] 4.1.3 边缘提取应用：相同参数处理原图与平滑图。
-- [ ] 4.2.1 Clip-art JPEG 伪影处理。
+- [x] 4.2.1 Clip-art JPEG 伪影处理。
 - [ ] 4.2.2 PSNR／SSIM 和局部结果比较。
 - [ ] 课程报告：原理、运行说明、实验分析、参考来源。
 - [ ] Demo 与课堂展示材料；现场展示由本人完成。
@@ -67,3 +67,15 @@ python3 experiment_edges.py --output results/edges_rerun
 对原图和平滑图统一做 8 位量化、RGB 转灰度，使用相同 Canny 阈值、3×3 Sobel 和 L2 梯度，
 不额外添加预模糊。保存两幅边缘图、四面板对照图和 `edges.json`。
 默认实验结果见 `results/edges/`，分析见该目录的 `ANALYSIS.md`。
+
+## Clip-art JPEG 去伪影
+
+```bash
+python3 jpeg_application.py data/clipart/line_art_clean.png --output results/my_jpeg --quality 10 --lambdas 0.001 0.003 0.01 0.03
+python3 experiment_jpeg.py --output results/jpeg_rerun
+```
+
+输出目录须为空。程序从干净图生成真实 JPEG，再解码并运行 L0 平滑，保存干净图、
+JPEG 文件、解码 PNG、各参数恢复图、全图和局部对照、`jpeg_run.json`。
+干净图不参与恢复优化。完整实验为两幅插画 × 两档压缩质量 × 四档 lambda。
+参数记录包含质量、色度采样、lambda、kappa、beta_max、迭代次数、耗时与裁剪坐标。

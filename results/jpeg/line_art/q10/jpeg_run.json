@@ -1,0 +1,61 @@
+{
+  "source_filename": "line_art_clean.png",
+  "quality": 10,
+  "subsampling": 0,
+  "jpeg_options": {
+    "optimize": false,
+    "progressive": false
+  },
+  "clean_sha256": "44e0c4bb6d74493a3f12cd1cdba3354c45753639c97885ca889d2f6e99f7655d",
+  "compressed_sha256": "6d13a74e0deb013e4676238d868b9ec644d81d3067fbe81ad74e1cbaece7697e",
+  "crop_xyxy": [
+    100,
+    65,
+    180,
+    121
+  ],
+  "environment": {
+    "python": "3.10.12",
+    "numpy": "2.2.4",
+    "pillow": "11.3.0"
+  },
+  "runs": [
+    {
+      "lambda_": 0.001,
+      "kappa": 2.0,
+      "beta_max": 100000.0,
+      "iterations": 26,
+      "elapsed_seconds": 0.018511792000026617,
+      "output": "restored_lambda_0.001.png",
+      "output_sha256": "f52aea9ac56b9c5d60d302a4b6de91d6fc95f079f18b98d0e1b2f435862d7718"
+    },
+    {
+      "lambda_": 0.003,
+      "kappa": 2.0,
+      "beta_max": 100000.0,
+      "iterations": 24,
+      "elapsed_seconds": 0.01857355400011329,
+      "output": "restored_lambda_0.003.png",
+      "output_sha256": "fa379cd50409c169c4f2818126fb42313065989405792c621065a8fa2b2793fc"
+    },
+    {
+      "lambda_": 0.01,
+      "kappa": 2.0,
+      "beta_max": 100000.0,
+      "iterations": 23,
+      "elapsed_seconds": 0.015692984999986948,
+      "output": "restored_lambda_0.01.png",
+      "output_sha256": "58933220a9cef4680a07643abdf86b5906f876ca2e6df52afd4f7729d2098bbe"
+    },
+    {
+      "lambda_": 0.03,
+      "kappa": 2.0,
+      "beta_max": 100000.0,
+      "iterations": 21,
+      "elapsed_seconds": 0.014777979000200503,
+      "output": "restored_lambda_0.03.png",
+      "output_sha256": "3db947bf4bbc305c0465d0f322b37938ff91b04425a7b1281a192f6acf3b9244"
+    }
+  ],
+  "note": "恢复只读取解码后的 JPEG；干净图用于生成压缩输入及事后比较，不参与 L0 优化。"
+}
