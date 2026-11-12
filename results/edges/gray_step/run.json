@@ -1,0 +1,26 @@
+{
+  "schema_version": 1,
+  "input": "input.png",
+  "input_sha256": "7dd0409e70dcf4a771d0f9621ca151a1399cef0a42c7ade0134e6d4dbd8acb52",
+  "source_filename": "gray_step_input.png",
+  "shape": [
+    128,
+    192
+  ],
+  "parameters": {
+    "lambda_": 0.02,
+    "kappa": 2.0,
+    "beta_max": 100000.0
+  },
+  "iterations": 22,
+  "elapsed_seconds": 0.02121741399992061,
+  "environment": {
+    "python": "3.10.12",
+    "numpy": "2.2.4",
+    "pillow": "11.3.0"
+  },
+  "preprocessing": "EXIF orientation; alpha over white; 8-bit L/RGB divided by 255; periodic boundary",
+  "float_output": "smoothed.npy",
+  "display_output": "smoothed.png",
+  "display_sha256": "167e5b7011e98dfb179bf965cbc274aba2d618ff406c069d82c9fafa0d9d293d"
+}

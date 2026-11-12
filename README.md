@@ -25,7 +25,7 @@ https://doi.org/10.1145/2024156.2024208 。
 
 - [x] 4.1.1 结构平滑与参数控制：核心算法、三组插画、三档 lambda 和两档 kappa 实验已完成。
 - [x] 4.1.2 完整程序与结果复现：8 位灰度／彩色图片载入、保存及运行包复现。
-- [ ] 4.1.3 边缘提取应用：相同参数处理原图与平滑图。
+- [x] 4.1.3 边缘提取应用：相同参数处理原图与平滑图。
 - [ ] 4.2.1 Clip-art JPEG 伪影处理。
 - [ ] 4.2.2 PSNR／SSIM 和局部结果比较。
 - [ ] 课程报告：原理、运行说明、实验分析、参考来源。
@@ -56,3 +56,14 @@ python3 main.py replay results/my_run/run.json --output results/my_replay
 输入按 EXIF 方向旋转，透明像素合成白底，再转换为 8 位灰度/RGB 的 [0,1] 浮点数组；
 高位深／浮点图片要求先自行转换，以免无提示地截断数值。
 依赖版本不同可能导致浮点数或 PNG 编码差异，复现检查会报告差异。
+
+## 边缘提取
+
+```bash
+python3 main.py edges data/illustrations/color_landscape_input.png --output results/my_edges --lambda 0.02 --low 20 --high 40
+python3 experiment_edges.py --output results/edges_rerun
+```
+
+对原图和平滑图统一做 8 位量化、RGB 转灰度，使用相同 Canny 阈值、3×3 Sobel 和 L2 梯度，
+不额外添加预模糊。保存两幅边缘图、四面板对照图和 `edges.json`。
+默认实验结果见 `results/edges/`，分析见该目录的 `ANALYSIS.md`。

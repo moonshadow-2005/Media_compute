@@ -72,10 +72,24 @@ def main(argv=None):
     repeat = commands.add_parser('replay', help='使用运行包中的输入和参数重新运行')
     repeat.add_argument('record', type=Path)
     repeat.add_argument('--output', type=Path, required=True)
+    edge = commands.add_parser('edges', help='平滑并用同参数 Canny 对比原图和平滑图')
+    edge.add_argument('input', type=Path)
+    edge.add_argument('--output', type=Path, required=True)
+    edge.add_argument('--lambda', dest='lambda_', type=float, default=.02)
+    edge.add_argument('--kappa', type=float, default=2.)
+    edge.add_argument('--beta-max', type=float, default=1e5)
+    edge.add_argument('--low', type=float, default=20.)
+    edge.add_argument('--high', type=float, default=40.)
     args = parser.parse_args(argv)
     try:
-        if args.command == 'smooth':
+        if args.command in ('smooth', 'edges'):
+            if args.command == 'edges':
+                from edge_application import canny
+                canny(np.zeros((2, 2)), args.low, args.high)  # 写文件前验证参数。
             result = run_smoothing(args.input, args.output, args.lambda_, args.kappa, args.beta_max)
+            if args.command == 'edges':
+                from edge_application import add_edges
+                add_edges(args.output, args.low, args.high)
         else:
             result = replay(args.record, args.output)
     except (OSError, ValueError, KeyError) as error:

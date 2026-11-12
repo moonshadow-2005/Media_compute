@@ -1,0 +1,24 @@
+{
+  "detector": "OpenCV Canny",
+  "opencv": "4.13.0",
+  "shared_parameters": {
+    "low": 20.0,
+    "high": 40.0,
+    "apertureSize": 3,
+    "L2gradient": true
+  },
+  "preprocessing": "same 8-bit quantization; RGB to grayscale; no additional blur",
+  "input_edge_pixels": 6162,
+  "smoothed_edge_pixels": 128,
+  "reference_note": "干净人工插画的同参数 Canny，容忍 1 像素；不是人工标注边缘真值。",
+  "input_vs_reference": {
+    "edge_pixels": 6162,
+    "pixels_away_from_reference": 5971,
+    "reference_coverage_within_1px": 1.0
+  },
+  "smoothed_vs_reference": {
+    "edge_pixels": 128,
+    "pixels_away_from_reference": 0,
+    "reference_coverage_within_1px": 1.0
+  }
+}

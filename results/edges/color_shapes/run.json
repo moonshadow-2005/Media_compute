@@ -1,0 +1,27 @@
+{
+  "schema_version": 1,
+  "input": "input.png",
+  "input_sha256": "6ff23b0d7b5b7bc5493ef32e2338f6969424f1c4b73fd9ec7e6a44369dbdf40e",
+  "source_filename": "color_shapes_input.png",
+  "shape": [
+    128,
+    192,
+    3
+  ],
+  "parameters": {
+    "lambda_": 0.02,
+    "kappa": 2.0,
+    "beta_max": 100000.0
+  },
+  "iterations": 22,
+  "elapsed_seconds": 0.06877610199990158,
+  "environment": {
+    "python": "3.10.12",
+    "numpy": "2.2.4",
+    "pillow": "11.3.0"
+  },
+  "preprocessing": "EXIF orientation; alpha over white; 8-bit L/RGB divided by 255; periodic boundary",
+  "float_output": "smoothed.npy",
+  "display_output": "smoothed.png",
+  "display_sha256": "4dc2fe9bed6ba98fc26f1c1e40c076088c8ebceccc151eeb9c778f737e746fd5"
+}
