@@ -1,0 +1,19 @@
+{
+  "data_range": 1,
+  "domain": "saved 8-bit PNG/JPEG decoded to [0,1]",
+  "PSNR": "-10*log10(mean((reference-candidate)^2)); clean identity is inf",
+  "SSIM": {
+    "window": [
+      11,
+      11
+    ],
+    "gaussian_sigma": 1.5,
+    "K1": 0.01,
+    "K2": 0.03,
+    "covariance": "population",
+    "border_crop": 5,
+    "channels": "per-channel then mean"
+  },
+  "opencv": "4.13.0",
+  "crop": "jpeg_run.json crop_xyxy, identical for all methods"
+}
