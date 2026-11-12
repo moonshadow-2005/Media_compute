@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="zh-CN">
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>L0 梯度最小化 · 蒋天乐</title>
+<style>
+:root{color-scheme:light;font-family:system-ui,'Microsoft YaHei',sans-serif;color:#172735;background:#eef3f5}*{box-sizing:border-box}body{max-width:1180px;margin:auto;padding:30px 20px 60px}header{padding:18px 0 24px}h1{font-size:32px;margin:8px 0}h2{font-size:23px}p{line-height:1.7}.eyebrow{color:#236c78;font-weight:600}nav{display:flex;gap:20px;flex-wrap:wrap}a{color:#166d7b}section{background:white;border:1px solid #d9e3e7;border-radius:14px;padding:24px;margin:24px 0}label{display:inline-flex;align-items:center;gap:8px;margin:0 18px 12px 0}select{font:inherit;padding:7px;border:1px solid #aabfc7;border-radius:5px}.panels{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px}figure{margin:0}img{width:100%;height:auto;image-rendering:auto;border:1px solid #e4eaed}figcaption{padding:8px 0;color:#465e6c}.metric{background:#e8f4f2;border-radius:6px;padding:12px;font-variant-numeric:tabular-nums}.note{color:#546875}.crop{image-rendering:pixelated}.formula{font-family:monospace;background:#f1f5f7;padding:16px;overflow:auto}@media(max-width:650px){body{padding:12px}section{padding:15px}h1{font-size:26px}}
+</style>
+<header><div class="eyebrow">媒体计算 · 第 4 题 · 蒋天乐</div><h1>L0 梯度最小化</h1>
+<p>抑制低幅度纹理，保留主要边界。先看结构平滑，再看边缘提取和 JPEG 去伪影。</p>
+<nav><a href="#smoothing">结构平滑</a><a href="#edges">边缘提取</a><a href="#jpeg">JPEG 去伪影</a><a href="#method">算法与限制</a></nav></header>
+<section id="smoothing"><h2>1. 结构平滑与参数控制</h2>
+<label>输入<select id="smooth-name"><option value="gray_step">灰度阶跃</option><option value="color_landscape" selected>彩色风景</option><option value="color_shapes">彩色几何</option></select></label>
+<label>λ<select id="smooth-lambda"><option>0.005</option><option selected>0.02</option><option>0.08</option></select></label>
+<label>κ<select id="smooth-kappa"><option>1.5</option><option selected>2</option></select></label>
+<div class="panels"><figure><img id="smooth-input" alt="带细密纹理的输入图"><figcaption>输入</figcaption></figure><figure><img id="smooth-output" alt="所选参数下的 L0 平滑结果"><figcaption>L0 平滑</figcaption></figure></div>
+<p id="smooth-info" class="metric" role="status"></p><p class="note">λ 较大通常去掉更多结构；κ 较小需要更多迭代。尝试 λ=0.08，观察房屋交界的细节变化。</p></section>
+<section id="edges"><h2>2. 相同参数的边缘检测</h2>
+<label>输入<select id="edge-name"><option value="gray_step">灰度阶跃</option><option value="color_landscape" selected>彩色风景</option><option value="color_shapes">彩色几何</option></select></label>
+<img id="edge-comparison" alt="从左至右：原图、平滑图、原图 Canny、平滑图 Canny"><p id="edge-info" class="metric" role="status"></p>
+<p class="note">从左至右为原图、平滑图、原图边缘、平滑图边缘。两路均用 Canny 20/40，参考是干净插画的同参数边缘，容忍 1 像素。</p></section>
+<section id="jpeg"><h2>3. JPEG 压缩伪影与细节保留</h2>
+<label>输入<select id="jpeg-name"><option value="color_landscape">彩色风景</option><option value="line_art">灰度线条</option></select></label>
+<label>JPEG 质量<select id="jpeg-quality"><option>10</option><option>30</option></select></label>
+<label>λ<select id="jpeg-lambda"><option>0.001</option><option>0.003</option><option selected>0.01</option><option>0.03</option></select></label>
+<div class="panels"><figure><img id="jpeg-clean" alt="干净参考图"><figcaption>干净图</figcaption></figure><figure><img id="jpeg-compressed" alt="JPEG 压缩图"><figcaption>JPEG 输入</figcaption></figure><figure><img id="jpeg-restored" alt="L0 恢复图"><figcaption>L0 恢复</figcaption></figure></div>
+<p id="jpeg-info" class="metric" role="status"></p><h3>同一局部，比较全部 λ</h3><img id="jpeg-crop" class="crop" alt="从左至右：干净图、JPEG、lambda 为 0.001、0.003、0.01、0.03 的恢复局部">
+<p class="note">顺序：干净图、JPEG、λ=0.001、0.003、0.01、0.03。局部放大 3 倍。观察振铃减弱时，细线是否断裂；指标改善也可能伴随局部细节损失。</p></section>
+<section id="method"><h2>算法与适用范围</h2><div class="formula">min ||S−I||² + λ · #{具有非零梯度的像素}<br><br>1. 周期前向差分 DxS、DyS<br>2. 汇总同一像素的所有颜色通道和两个梯度方向<br>3. 梯度能量 ≤ λ/β：h=v=0；否则保留梯度<br>4. 用 FFT 解固定 h、v 的二次子问题<br>5. β ← κβ，直到 β ≥ 100000</div>
+<p>周期差分、联合阈值、FFT 更新和交替优化均在项目中实现。边缘检测使用 OpenCV Canny。实验输入是原创人工插画，不能据此保证自然照片效果；周期边界、弱轮廓与细线都是需要检查的情况。</p>
+<p class="note">本页切换已保存的真实实验结果，可离线使用。重新计算全部实验：<code>python3 demo.py --recompute --output results/live_demo</code>。处理自己的图片见项目 README。</p></section>
+<script id="demo-data" type="application/json">__DEMO_DATA__</script>
+<script>
+'use strict';
+const data=JSON.parse(document.getElementById('demo-data').textContent);
+const el=id=>document.getElementById(id);
+function renderSmooth(){const r=data.smooth.find(r=>r.name===el('smooth-name').value&&r.lambda===Number(el('smooth-lambda').value)&&r.kappa===Number(el('smooth-kappa').value));el('smooth-input').src=r.input;el('smooth-output').src=r.output;el('smooth-info').textContent=r.info;}
+function renderEdges(){const r=data.edges.find(r=>r.name===el('edge-name').value);el('edge-comparison').src=r.comparison;el('edge-info').textContent=r.info;}
+function renderJpeg(){const r=data.jpeg.find(r=>r.name===el('jpeg-name').value&&r.quality===Number(el('jpeg-quality').value)&&r.lambda===Number(el('jpeg-lambda').value));for(const key of ['clean','compressed','restored','crop'])el('jpeg-'+key).src=r[key];el('jpeg-info').textContent=r.info;}
+for(const id of ['smooth-name','smooth-lambda','smooth-kappa'])el(id).addEventListener('change',renderSmooth);
+el('edge-name').addEventListener('change',renderEdges);
+for(const id of ['jpeg-name','jpeg-quality','jpeg-lambda'])el(id).addEventListener('change',renderJpeg);
+renderSmooth();renderEdges();renderJpeg();
+</script>
+</html>

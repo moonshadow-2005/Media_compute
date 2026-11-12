@@ -29,7 +29,8 @@ https://doi.org/10.1145/2024156.2024208 。
 - [x] 4.2.1 Clip-art JPEG 伪影处理。
 - [x] 4.2.2 PSNR／SSIM 和局部结果比较。
 - [ ] 课程报告：原理、运行说明、实验分析、参考来源。
-- [ ] Demo 与课堂展示材料；现场展示由本人完成。
+- [x] 算法展示 Demo：离线参数切换和一键重算全部实验。
+- [ ] 课堂展示材料；现场展示由本人完成。
 
 ## 第一项实验
 
@@ -87,3 +88,18 @@ python3 evaluate_jpeg.py
 默认评估已有的 `results/jpeg`，可用 `--input results/jpeg_rerun` 指定复现实验。
 相对干净图计算全部方法的全图和局部 PSNR／SSIM，指标定义见 `metric_definition.json`，
 完整 24 条记录见 `metrics.csv`，分析见 `results/jpeg/ANALYSIS.md`。
+
+## 算法展示 Demo
+
+直接用浏览器打开 `results/demo/index.html`，可以离线切换输入、lambda、kappa、JPEG 质量，
+查看平滑、边缘、恢复局部和实际指标。页面显示已保存实验结果。
+
+```bash
+python3 demo.py
+python3 demo.py --recompute --output results/live_demo
+```
+
+第一条重新生成离线页面；第二条实际运行所有实验及指标评估后生成页面，输出目录下的
+`runs` 必须不存在。重算结果位于 `results/live_demo/runs`，不覆盖原有实验。
+测试中对完整独立重跑的 77 张图逐像素核对一致，两份指标 CSV 排除耗时后也完全一致。
+Demo 图片和指标绑定已通过 Node 执行页面脚本检查 37 组参数选择；未将该检查等同于浏览器截图验收。
