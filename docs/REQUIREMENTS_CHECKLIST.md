@@ -17,17 +17,18 @@
 | 输入归一化、参数、迭代次数、耗时 | 各运行包 JSON、平滑 CSV、JPEG JSON | 通过 |
 | 可运行代码、依赖与操作说明 | `requirements.txt`、`README.md` | 通过 |
 | 算法展示 Demo | `l0_smoothing/demo.py`、`results/demo/index.html` | 通过；实际重算链路成功，37 组参数选择绑定正确 |
+| 动态调参与现场计算 | `l0_smoothing/streamlit_app.py`、`interactive.py`、`serve.py` | 通过；Streamlit 滑块、任务选择、上传和手动计算均经过 AppTest，真实服务启动成功 |
 | 报告：原理与实现 | `REPORT.md` 第 2 节 | 公式、步骤、代码映射与验证齐全 |
 | 报告：数据、参数与运行说明 | `REPORT.md` 第 3 节 | 来源、预处理、版本、命令与随机种子说明齐全 |
 | 报告：结果与分析 | `REPORT.md` 第 4 节及嵌入结果图 | 参数对照、数值、局部、效率与失败案例齐全 |
 | 报告：工作与参考来源 | `REPORT.md` 第 5、6 节 | 单人工作、Agent 使用、限制、第三方来源齐全 |
-| 课堂展示准备 | `PRESENTATION.md` 与离线 Demo | 已准备原理、实际运行、结果、分析、答辩；现场展示由作者完成 |
+| 课堂展示准备 | `PRESENTATION.md`、Streamlit 及离线备用 Demo | 已准备原理、实际运行、结果、分析、答辩；现场展示由作者完成 |
 | Git 开发阶段及作者 | 保留九个功能阶段，作者及提交者均为蒋天乐 | 提交元数据已按要求整理，原始时间与 hash 对照保存在本地日志 |
 | 本地 AI 与提交日志 | `AI_LOG.md`、`COMMIT_LOG.md` | 每次提交后补记完整 hash；两文件忽略且当前不被 Git 跟踪 |
 
 ## 执行过的核验
 
-- `python3 -m pytest -q`：18 项通过，覆盖数学子问题、输入输出、复现、边缘、JPEG、指标与 Demo 数据绑定。
+- `python3 -m pytest -q`：26 项通过，覆盖数学子问题、输入输出、复现、边缘、JPEG、指标、离线数据绑定和 Streamlit 现场计算。
 - `python3 main.py replay results/cli_example/run.json --output /tmp/l0-replay-stage2`：显示结果 SHA256 一致。
 - `python3 main.py demo --recompute --output /tmp/l0-complete-demo`：结构平滑、边缘、JPEG 和评估全部成功。
 - 将完整重跑的 77 张 PNG 与已保存实验逐像素比较：全部一致。
@@ -37,6 +38,10 @@
 
 目录整理后再次执行 18 项测试与全部实验重算；统一入口为 `main.py`，
 核心代码位于 `l0_smoothing/`，批量实验位于 `experiments/`，分析文档集中于 `docs/experiments/`。
+
+增加 Streamlit 后执行官方 AppTest：动态 λ 调整确实改变输出，手动模式保留并标记上次结果，
+上传与清除图片正确切换输入，非法 Canny 参数被提示，局部查看不重复执行算法。
+通过真实子进程启动 `main.py serve`，主页及 `/_stcore/health` 均成功响应，检查后停止服务。
 
 ## 核验边界
 

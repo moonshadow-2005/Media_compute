@@ -2,3 +2,4 @@ numpy==2.2.4
 Pillow==11.3.0
 pytest==8.3.5
 opencv-python==4.13.0.92
+streamlit==1.57.0

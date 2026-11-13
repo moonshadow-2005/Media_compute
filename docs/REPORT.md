@@ -11,6 +11,7 @@
 本项目复现 L0 梯度最小化的核心算法，实现灰度和彩色图像结构平滑、参数控制、
 同参数边缘提取，以及 Clip-art JPEG 压缩伪影处理。输入、输出、运行参数、迭代次数和耗时
 随实验保存，另提供命令行运行包、参数复现和离线交互 Demo。
+后续补充 Streamlit 现场计算 Demo，可在页面调整参数、上传图像、查看局部及下载当前结果。
 
 算法中的周期差分、颜色通道联合阈值、FFT 闭式更新和交替优化均在本项目中实现。
 NumPy 用于数组及 FFT，Pillow 用于图像读写与 JPEG 编码，OpenCV 用于基础 Canny、
@@ -100,7 +101,7 @@ JPEG 实验使用干净彩色风景及含房屋、圆形、1／2／3 像素斜�
 
 ### 3.2 环境及依赖
 
-已验证环境为 Linux、Python 3.10.12、NumPy 2.2.4、Pillow 11.3.0、OpenCV 4.13.0.92、pytest 8.3.5。
+已验证环境为 Linux、Python 3.10.12、NumPy 2.2.4、Pillow 11.3.0、OpenCV 4.13.0.92、pytest 8.3.5、Streamlit 1.57.0。
 直接依赖固定在 `requirements.txt`。程序不需要 GPU、网络服务或完整 L0 库。
 建议使用 Python 3.10／3.11。命令均从“大作业”目录执行，Windows 可将 python3 替换为 python。
 
@@ -110,6 +111,7 @@ python3 -m pytest -q
 python3 main.py smooth data/illustrations/color_landscape_input.png --output results/report_run --lambda 0.02 --kappa 2
 python3 main.py replay results/report_run/run.json --output results/report_replay
 python3 main.py demo --recompute --output results/report_demo
+python3 main.py serve
 ```
 
 除明确可重新生成的结构平滑对照外，运行包和重算目标要求使用新目录，避免覆盖已有实验。
@@ -191,9 +193,14 @@ kappa=1.5 时分别为 40、37、33 次。不同 lambda 的初始 beta 不同，
 
 完整独立重跑覆盖结构平滑、边缘和 JPEG 实验，77 张输出 PNG 与已保存结果逐像素一致；
 结构平滑和 JPEG 两份指标 CSV 排除实际耗时字段后完全一致。
-截至本报告，18 项测试全部通过。Demo 的 37 组参数切换通过实际页面脚本绑定检查；
+截至本报告更新，26 项测试全部通过。离线 Demo 的 37 组参数切换通过实际页面脚本绑定检查；
 该检查不等同于真实浏览器截图检查。跨系统数值或编码库变化可能造成 SHA256 不同，
 程序会保留复现检查结果供核对。
+
+Streamlit 模式直接调用同一核心算法，参数改变会重新计算。测试使用官方 AppTest 操作实际页面的
+滑块、任务选择、手动计算按钮和上传控件，验证结果随参数改变、非法参数被报告、旧结果不会冒充新结果。
+另实际启动服务并检查主页和健康接口。为控制现场计算等待时间，上传预览最长边限制为 768 像素，
+页面记录原始及处理后尺寸；不将预览结果当作全尺寸计算。局部查看与下载复用当次结果。
 
 ## 5. 不足、工作说明与交付
 
@@ -215,6 +222,6 @@ FFT 求解的是每轮二次子问题，不代表离散非凸总问题得到全�
 
 1. Li Xu, Cewu Lu, Yi Xu, Jiaya Jia. *Image Smoothing via L0 Gradient Minimization*. ACM Transactions on Graphics, 30(6), Article 174, 2011. [DOI](https://doi.org/10.1145/2024156.2024208)；[作者论文 PDF](https://www.cse.cuhk.edu.hk/~leojia/papers/L0smooth_Siggraph_Asia2011.pdf)；[项目页](https://www.cse.cuhk.edu.hk/~leojia/projects/L0smoothing/)。核心对应论文第 3 节，应用对应第 4.1、4.3 节。
 2. 课程要求：项目根目录 `docs/course_requirements.md`。
-3. [NumPy](https://numpy.org/)、[Pillow](https://python-pillow.org/)、[OpenCV Canny 文档](https://docs.opencv.org/4.13.0/da/d22/tutorial_py_canny.html)。版本见 `requirements.txt`。
+3. [NumPy](https://numpy.org/)、[Pillow](https://python-pillow.org/)、[OpenCV Canny 文档](https://docs.opencv.org/4.13.0/da/d22/tutorial_py_canny.html)、[Streamlit](https://docs.streamlit.io/)。版本见 `requirements.txt`。
 4. [scikit-image SSIM 接口与参数说明](https://scikit-image.org/docs/0.25.x/api/skimage.metrics.html#skimage.metrics.structural_similarity)，用于指标定义参考；运行未依赖该库。
 5. 数据均由本项目几何图案生成，具体来源和生成脚本见两个数据目录的 README。

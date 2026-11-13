@@ -5,6 +5,7 @@
 第 4 题基础与额外功能均已实现。报告见 `docs/REPORT.md`，7 分钟展示提纲见
 `docs/PRESENTATION.md`，逐项验收见 `docs/REQUIREMENTS_CHECKLIST.md`。
 可直接双击 `results/demo/index.html` 查看离线 Demo。
+需要动态调整参数并现场计算时，运行 `python3 main.py serve` 启动 Streamlit。
 
 ## 目录导航
 
@@ -20,6 +21,9 @@
 │   ├── jpeg.py              # JPEG 去伪影
 │   ├── metrics.py           # PSNR、SSIM
 │   ├── demo.py              # 离线展示生成
+│   ├── interactive.py       # 交互计算与图片预处理
+│   ├── streamlit_app.py     # Streamlit 参数、图像和指标页面
+│   ├── serve.py             # 本地交互服务启动
 │   └── templates/          # 展示页面模板
 ├── experiments/             # 平滑、边缘、JPEG 批量实验与评估
 ├── tests/                   # 数学、流程及展示验证
@@ -125,7 +129,32 @@ python3 -m experiments.evaluate_jpeg
 相对干净图计算全部方法的全图和局部 PSNR／SSIM，指标定义见 `metric_definition.json`，
 完整 24 条记录见 `metrics.csv`，分析见 `docs/experiments/jpeg.md`。
 
-## 算法展示 Demo
+## Streamlit 现场计算 Demo（推荐课堂演示）
+
+```bash
+python3 -m pip install -r requirements.txt
+python3 main.py serve
+```
+
+保持该终端运行，在浏览器打开 **http://localhost:8501**。WSL Bash 中可在另一个终端执行：
+
+```bash
+explorer.exe "http://localhost:8501"
+```
+
+按 `Ctrl+C` 停止服务；端口占用时用 `python3 main.py serve --port 8502`，然后打开对应端口。
+Streamlit 依赖固定为 1.57.0；页面、计算和图片处理都在本机进行，不需要云端部署。
+
+- 侧栏选择结构平滑、边缘提取或 JPEG 去伪影，使用内置样例或上传图片。
+- 拖动 λ、κ、Canny 阈值和 JPEG 质量后自动重新计算；可以关闭自动计算，改用“重新计算”按钮。
+- 主区域显示本次结果、迭代次数、耗时和指标；参数改变但尚未手动计算时会明确提示旧结果。
+- 支持局部放大及下载本次 PNG 和 `parameters.json` 的 ZIP。下载和查看局部不会重复计算。
+- 上传限制为 8 MiB、1600 万像素，预览最长边缩至 768 像素；页面显示缩放前后尺寸。原图不修改，全尺寸运行仍可用 `main.py smooth`。
+
+交互计算没有使用缓存结果图片。自动计算仅在输入或算法参数变化时执行；“重新计算”可强制重跑相同参数。
+下载的 `parameters.json` 是交互记录，区别于命令行运行包供 `replay` 使用的 `run.json`。
+
+## 离线结果展示
 
 直接用浏览器打开 `results/demo/index.html`，可以离线切换输入、lambda、kappa、JPEG 质量，
 查看平滑、边缘、恢复局部和实际指标。页面显示已保存实验结果。
@@ -139,3 +168,4 @@ python3 main.py demo --recompute --output results/live_demo
 `runs` 必须不存在。重算结果位于 `results/live_demo/runs`，不覆盖原有实验。
 测试中对完整独立重跑的 77 张图逐像素核对一致，两份指标 CSV 排除耗时后也完全一致。
 Demo 图片和指标绑定已通过 Node 执行页面脚本检查 37 组参数选择；未将该检查等同于浏览器截图验收。
+Streamlit 交互通过官方 AppTest 验证参数变化、手动计算、三种任务、图片上传与清除，并实际启动服务检查健康状态和主页；当前共 26 项测试通过。
