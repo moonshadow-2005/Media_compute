@@ -9,7 +9,7 @@ from pathlib import Path
 import numpy as np
 from PIL import Image, ImageDraw, __version__ as pillow_version
 
-from l0_smoothing import periodic_gradient, smooth
+from l0_smoothing.core import periodic_gradient, smooth
 
 
 def make_illustrations():

@@ -8,7 +8,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-PROJECT = Path(__file__).resolve().parent
+PROJECT = Path(__file__).resolve().parents[1]
 
 
 def image_uri(path):
@@ -49,28 +49,28 @@ def build_demo(results, output):
                     'clean': image_uri(folder / 'clean.png'), 'compressed': image_uri(folder / 'compressed.png'),
                     'restored': image_uri(folder / run['output']), 'crop': image_uri(folder / 'crop_comparison.png'),
                     'info': f"PSNR {float(baseline['psnr_db']):.2f} → {float(row['psnr_db']):.2f} dB；SSIM {float(baseline['ssim']):.4f} → {float(row['ssim']):.4f}"})
-    template = (PROJECT / 'demo_template.html').read_text(encoding='utf-8')
+    template = (Path(__file__).resolve().parent / 'templates/demo.html').read_text(encoding='utf-8')
     rendered = template.replace('__DEMO_DATA__', json.dumps(data, ensure_ascii=False).replace('</', '<\\/'))
     output.parent.mkdir(parents=True, exist_ok=True)
     output.write_text(rendered, encoding='utf-8')
     return data
 
 
-def main():
+def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--output', type=Path, default=Path('results/demo'))
     parser.add_argument('--recompute', action='store_true', help='重新运行全部实验，再生成展示；输出 runs 目录必须不存在')
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
     output = args.output.resolve()
     results = PROJECT / 'results'
     if args.recompute:
         results = output / 'runs'
         if results.exists():
             parser.error(f'复现实验目录已存在，请指定新的 --output：{results}')
-        for script, name in [('experiment_smoothing.py', 'structure_smoothing'),
-                             ('experiment_edges.py', 'edges'), ('experiment_jpeg.py', 'jpeg')]:
-            subprocess.run([sys.executable, str(PROJECT / script), '--output', str(results / name)], cwd=PROJECT, check=True)
-        subprocess.run([sys.executable, str(PROJECT / 'evaluate_jpeg.py'), '--input', str(results / 'jpeg')], cwd=PROJECT, check=True)
+        for module, name in [('experiments.smoothing', 'structure_smoothing'),
+                             ('experiments.edges', 'edges'), ('experiments.jpeg', 'jpeg')]:
+            subprocess.run([sys.executable, '-m', module, '--output', str(results / name)], cwd=PROJECT, check=True)
+        subprocess.run([sys.executable, '-m', 'experiments.evaluate_jpeg', '--input', str(results / 'jpeg')], cwd=PROJECT, check=True)
     build_demo(results, output / 'index.html')
     print(f'离线展示已生成，双击或用浏览器打开：{output / "index.html"}')
 

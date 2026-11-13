@@ -9,7 +9,7 @@ from pathlib import Path
 import pytest
 from PIL import Image
 
-from demo import PROJECT, build_demo
+from l0_smoothing.demo import PROJECT, build_demo
 
 
 def test_offline_demo_images_and_every_parameter_selection(tmp_path):

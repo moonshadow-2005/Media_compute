@@ -66,11 +66,11 @@ $$
 
 | 数学步骤 | 代码位置 | 关键检查 |
 |---|---|---|
-| 周期前向差分 | `l0_smoothing.periodic_gradient` | 最后一列／行与第一列／行连接 |
-| 差分伴随 | `l0_smoothing.gradient_adjoint` | 内积恒等式与符号 |
-| 颜色及方向联合阈值 | `l0_smoothing.joint_threshold` | 全通道共用一个掩码，等号处置零 |
-| FFT 分母 | `l0_smoothing.difference_spectrum` | 两个方向的频率响应平方和 |
-| 固定 h、v 的闭式解 | `l0_smoothing.fft_update` | 与独立稠密线性方程求解对照 |
+| 周期前向差分 | `l0_smoothing.core.periodic_gradient` | 最后一列／行与第一列／行连接 |
+| 差分伴随 | `l0_smoothing.core.gradient_adjoint` | 内积恒等式与符号 |
+| 颜色及方向联合阈值 | `l0_smoothing.core.joint_threshold` | 全通道共用一个掩码，等号处置零 |
+| FFT 分母 | `l0_smoothing.core.difference_spectrum` | 两个方向的频率响应平方和 |
+| 固定 h、v 的闭式解 | `l0_smoothing.core.fft_update` | 与独立稠密线性方程求解对照 |
 | 交替优化 | `l0_smoothing.smooth` | 初始化、参数递增及终止条件 |
 
 ### 2.3 算法复杂度与验证
@@ -109,7 +109,7 @@ python3 -m pip install -r requirements.txt
 python3 -m pytest -q
 python3 main.py smooth data/illustrations/color_landscape_input.png --output results/report_run --lambda 0.02 --kappa 2
 python3 main.py replay results/report_run/run.json --output results/report_replay
-python3 demo.py --recompute --output results/report_demo
+python3 main.py demo --recompute --output results/report_demo
 ```
 
 除明确可重新生成的结构平滑对照外，运行包和重算目标要求使用新目录，避免覆盖已有实验。
@@ -214,7 +214,7 @@ FFT 求解的是每轮二次子问题，不代表离散非凸总问题得到全�
 ## 6. 参考来源
 
 1. Li Xu, Cewu Lu, Yi Xu, Jiaya Jia. *Image Smoothing via L0 Gradient Minimization*. ACM Transactions on Graphics, 30(6), Article 174, 2011. [DOI](https://doi.org/10.1145/2024156.2024208)；[作者论文 PDF](https://www.cse.cuhk.edu.hk/~leojia/papers/L0smooth_Siggraph_Asia2011.pdf)；[项目页](https://www.cse.cuhk.edu.hk/~leojia/projects/L0smoothing/)。核心对应论文第 3 节，应用对应第 4.1、4.3 节。
-2. 课程要求：项目根目录 `media_computing_topic4_and_course_requirements.md`。
+2. 课程要求：项目根目录 `docs/course_requirements.md`。
 3. [NumPy](https://numpy.org/)、[Pillow](https://python-pillow.org/)、[OpenCV Canny 文档](https://docs.opencv.org/4.13.0/da/d22/tutorial_py_canny.html)。版本见 `requirements.txt`。
 4. [scikit-image SSIM 接口与参数说明](https://scikit-image.org/docs/0.25.x/api/skimage.metrics.html#skimage.metrics.structural_similarity)，用于指标定义参考；运行未依赖该库。
 5. 数据均由本项目几何图案生成，具体来源和生成脚本见两个数据目录的 README。

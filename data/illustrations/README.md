@@ -1,6 +1,6 @@
 # 第一阶段实验输入
 
-三幅插画由本项目 `experiment_smoothing.py` 的 `make_illustrations()` 生成，
+三幅插画由本项目 `experiments/smoothing.py` 的 `make_illustrations()` 生成，
 不使用外部图片，无随机过程：
 
 - `gray_step`：带细密纹理的灰度阶跃边界。

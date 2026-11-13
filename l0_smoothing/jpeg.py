@@ -5,8 +5,8 @@ from pathlib import Path
 
 from PIL import Image
 
-from image_io import environment, load_image, save_comparison, save_png, sha256, to_uint8, write_json
-from l0_smoothing import smooth
+from l0_smoothing.image_io import environment, load_image, save_comparison, save_png, sha256, to_uint8, write_json
+from l0_smoothing.core import smooth
 
 
 def restore_jpeg(clean_path, output_dir, quality=10, lambdas=(.001, .003, .01, .03),

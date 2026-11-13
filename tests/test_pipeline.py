@@ -7,8 +7,8 @@ import numpy as np
 import pytest
 from PIL import Image
 
-from image_io import load_image
-from main import replay, run_smoothing
+from l0_smoothing.image_io import load_image
+from l0_smoothing.pipeline import replay, run_smoothing
 
 
 @pytest.mark.parametrize('mode', ['L', 'RGB'])

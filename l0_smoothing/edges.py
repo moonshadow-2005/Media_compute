@@ -5,7 +5,7 @@ from pathlib import Path
 import cv2
 import numpy as np
 
-from image_io import load_image, save_comparison, save_png, to_uint8, write_json
+from l0_smoothing.image_io import load_image, save_comparison, save_png, to_uint8, write_json
 
 
 def canny(image, low=20., high=40.):

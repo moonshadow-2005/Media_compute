@@ -17,7 +17,7 @@ Pillow 的 JPEG 质量参数是编码器设置，不解释为保留信息的百�
 | 灰度线条 | 30 | 27.8114 | 30.1615 | 0.91917 | 0.98161 |
 
 压缩前干净图相对自身 PSNR 为正无穷（CSV 记作 inf），SSIM 为 1。
-全参数结果及对应局部指标见 `metrics.csv`。四组固定 lambda 对照中，两项指标均改善。
+全参数结果及对应局部指标见 `results/jpeg/metrics.csv`（相对项目根目录）。四组固定 lambda 对照中，两项指标均改善。
 质量 10 的线条图中，圆边缘和斜线附近的灰白振铃、碎块明显减轻。
 
 ## 参数取舍和失败现象
@@ -39,10 +39,10 @@ lambda 增大可形成较大平坦区域，但部分细线会断裂，交界位�
 PSNR = -10 log10(MSE)，RGB 的 MSE 跨像素和通道平均。
 SSIM 使用 11×11 高斯窗口、sigma=1.5、K1=0.01、K2=0.03、总体协方差；
 仅平均有效窗口中心（裁去 5 像素边缘），RGB 各通道计算后平均。
-实现见 `quality_metrics.py`，GaussianBlur 为允许的基础函数；
+实现见 `l0_smoothing/metrics.py`，GaussianBlur 为允许的基础函数；
 测试用常量偏差解析解以及独立逐窗口加权公式验证指标。
 配置选择参照 [scikit-image SSIM 文档](https://scikit-image.org/docs/0.25.x/api/skimage.metrics.html#skimage.metrics.structural_similarity)，运行不依赖 scikit-image。
 
-复现命令：`python3 experiment_jpeg.py --output results/jpeg_rerun`，然后
-`python3 evaluate_jpeg.py --input results/jpeg_rerun`。
+复现命令：`python3 -m experiments.jpeg --output results/jpeg_rerun`，然后
+`python3 -m experiments.evaluate_jpeg --input results/jpeg_rerun`。
 评估前会核对实验输入及恢复图的 SHA256，防止混用其他运行结果。

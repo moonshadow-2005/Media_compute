@@ -6,6 +6,34 @@
 `docs/PRESENTATION.md`，逐项验收见 `docs/REQUIREMENTS_CHECKLIST.md`。
 可直接双击 `results/demo/index.html` 查看离线 Demo。
 
+## 目录导航
+
+```text
+大作业/
+├── main.py                  # 唯一命令行入口
+├── requirements.txt         # Python 依赖
+├── l0_smoothing/            # 算法、图像处理及应用模块
+│   ├── core.py              # 周期差分、联合阈值、FFT、交替优化
+│   ├── pipeline.py          # 平滑运行包与复现
+│   ├── image_io.py          # 图像读写、配置与对照图
+│   ├── edges.py             # Canny 边缘对照
+│   ├── jpeg.py              # JPEG 去伪影
+│   ├── metrics.py           # PSNR、SSIM
+│   ├── demo.py              # 离线展示生成
+│   └── templates/          # 展示页面模板
+├── experiments/             # 平滑、边缘、JPEG 批量实验与评估
+├── tests/                   # 数学、流程及展示验证
+├── data/                    # 输入图片和来源说明
+├── results/                 # 输出图片、运行配置、指标及离线 Demo
+├── docs/                    # 课程要求、报告、展示提纲及验收
+│   └── experiments/         # 三项实验的分析文档
+├── AI_LOG.md                # 本地记录，不纳入 Git
+└── COMMIT_LOG.md            # 本地提交说明，不纳入 Git
+```
+
+常用入口：`python3 main.py --help`。课程原始要求已移到
+[docs/course_requirements.md](docs/course_requirements.md)。
+
 ## 环境与运行
 
 已验证环境：Python 3.10.12，依赖见 `requirements.txt`。
@@ -15,7 +43,7 @@
 ```bash
 python3 -m pip install -r requirements.txt
 python3 -m pytest -q
-python3 experiment_smoothing.py
+python3 -m experiments.smoothing
 ```
 
 `l0_smoothing.smooth(image, lambda_=0.02, kappa=2.0, beta_max=1e5)`
@@ -40,7 +68,8 @@ https://doi.org/10.1145/2024156.2024208 。
 
 ## 第一项实验
 
-输入与来源见 `data/illustrations/README.md`，输出与分析见 `results/structure_smoothing/`。
+输入与来源见 `data/illustrations/README.md`，输出见 `results/structure_smoothing/`。
+参数分析见 [docs/experiments/structure_smoothing.md](docs/experiments/structure_smoothing.md)。
 默认生成 18 组平滑结果、3 张参数对照图，以及 `config.json` 和 `metrics.csv`。
 可通过 `--lambdas 0.005 0.02 0.08 --kappas 1.5 2 --beta-max 100000` 改变参数。
 实验脚本应在本目录运行，重复执行会更新对应实验产物。
@@ -69,18 +98,18 @@ python3 main.py replay results/my_run/run.json --output results/my_replay
 
 ```bash
 python3 main.py edges data/illustrations/color_landscape_input.png --output results/my_edges --lambda 0.02 --low 20 --high 40
-python3 experiment_edges.py --output results/edges_rerun
+python3 -m experiments.edges --output results/edges_rerun
 ```
 
 对原图和平滑图统一做 8 位量化、RGB 转灰度，使用相同 Canny 阈值、3×3 Sobel 和 L2 梯度，
 不额外添加预模糊。保存两幅边缘图、四面板对照图和 `edges.json`。
-默认实验结果见 `results/edges/`，分析见该目录的 `ANALYSIS.md`。
+默认实验结果见 `results/edges/`，分析见 [docs/experiments/edges.md](docs/experiments/edges.md)。
 
 ## Clip-art JPEG 去伪影
 
 ```bash
-python3 jpeg_application.py data/clipart/line_art_clean.png --output results/my_jpeg --quality 10 --lambdas 0.001 0.003 0.01 0.03
-python3 experiment_jpeg.py --output results/jpeg_rerun
+python3 main.py jpeg data/clipart/line_art_clean.png --output results/my_jpeg --quality 10 --lambdas 0.001 0.003 0.01 0.03
+python3 -m experiments.jpeg --output results/jpeg_rerun
 ```
 
 输出目录须为空。程序从干净图生成真实 JPEG，再解码并运行 L0 平滑，保存干净图、
@@ -89,12 +118,12 @@ JPEG 文件、解码 PNG、各参数恢复图、全图和局部对照、`jpeg_ru
 参数记录包含质量、色度采样、lambda、kappa、beta_max、迭代次数、耗时与裁剪坐标。
 
 ```bash
-python3 evaluate_jpeg.py
+python3 -m experiments.evaluate_jpeg
 ```
 
 默认评估已有的 `results/jpeg`，可用 `--input results/jpeg_rerun` 指定复现实验。
 相对干净图计算全部方法的全图和局部 PSNR／SSIM，指标定义见 `metric_definition.json`，
-完整 24 条记录见 `metrics.csv`，分析见 `results/jpeg/ANALYSIS.md`。
+完整 24 条记录见 `metrics.csv`，分析见 `docs/experiments/jpeg.md`。
 
 ## 算法展示 Demo
 
@@ -102,8 +131,8 @@ python3 evaluate_jpeg.py
 查看平滑、边缘、恢复局部和实际指标。页面显示已保存实验结果。
 
 ```bash
-python3 demo.py
-python3 demo.py --recompute --output results/live_demo
+python3 main.py demo
+python3 main.py demo --recompute --output results/live_demo
 ```
 
 第一条重新生成离线页面；第二条实际运行所有实验及指标评估后生成页面，输出目录下的

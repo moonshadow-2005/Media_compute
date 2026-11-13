@@ -7,7 +7,7 @@
 1. 在“大作业”目录安装依赖，运行 `python3 -m pytest -q`。
 2. 用浏览器打开离线 Demo，确认三个部分的图片可显示。可将浏览器放大或全屏。
 3. 准备一个尚不存在的目录，例如 `results/class_demo_01`，用于现场运行，避免覆盖已有结果。
-4. 打开 `l0_smoothing.py`，定位 `joint_threshold`、`fft_update`、`smooth`，便于解释公式。
+4. 打开 `l0_smoothing/core.py`，定位 `joint_threshold`、`fft_update`、`smooth`，便于解释公式。
 5. 备用材料是已提交的对照图和运行记录。若现场无法重算，明确展示已有结果，不将其说成刚刚运行。
 
 ## 0:00–0:40：问题与目标

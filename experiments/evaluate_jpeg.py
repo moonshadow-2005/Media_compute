@@ -7,8 +7,8 @@ from pathlib import Path
 
 import cv2
 
-from image_io import load_image, sha256, write_json
-from quality_metrics import measure_quality
+from l0_smoothing.image_io import load_image, sha256, write_json
+from l0_smoothing.metrics import measure_quality
 
 
 def evaluate(root):
@@ -16,7 +16,7 @@ def evaluate(root):
     rows = []
     records = sorted(root.glob('*/*/jpeg_run.json'))
     if not records:
-        raise ValueError('未找到 JPEG 实验，请先运行 experiment_jpeg.py')
+        raise ValueError('未找到 JPEG 实验，请先运行 python3 -m experiments.jpeg')
     for record_path in records:
         folder = record_path.parent
         record = json.loads(record_path.read_text(encoding='utf-8'))

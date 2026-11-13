@@ -1,6 +1,6 @@
 # JPEG 实验输入来源
 
-`line_art_clean.png` 由 `experiment_jpeg.py` 中 `make_line_art()` 使用 Pillow 几何图形生成，
+`line_art_clean.png` 由 `experiments/jpeg.py` 中 `make_line_art()` 使用 Pillow 几何图形生成，
 大小为 192×128、8 位灰度：房屋、圆形和三根宽度分别为 1、2、3 像素的斜线。
 另一组使用 `../illustrations/color_landscape_clean.png`，为本项目原创彩色插画。
 均不含外部素材，不使用随机过程。

@@ -27,7 +27,7 @@
 <p class="note">顺序：干净图、JPEG、λ=0.001、0.003、0.01、0.03。局部放大 3 倍。观察振铃减弱时，细线是否断裂；指标改善也可能伴随局部细节损失。</p></section>
 <section id="method"><h2>算法与适用范围</h2><div class="formula">min ||S−I||² + λ · #{具有非零梯度的像素}<br><br>1. 周期前向差分 DxS、DyS<br>2. 汇总同一像素的所有颜色通道和两个梯度方向<br>3. 梯度能量 ≤ λ/β：h=v=0；否则保留梯度<br>4. 用 FFT 解固定 h、v 的二次子问题<br>5. β ← κβ，直到 β ≥ 100000</div>
 <p>周期差分、联合阈值、FFT 更新和交替优化均在项目中实现。边缘检测使用 OpenCV Canny。实验输入是原创人工插画，不能据此保证自然照片效果；周期边界、弱轮廓与细线都是需要检查的情况。</p>
-<p class="note">本页切换已保存的真实实验结果，可离线使用。重新计算全部实验：<code>python3 demo.py --recompute --output results/live_demo</code>。处理自己的图片见项目 README。</p></section>
+<p class="note">本页切换已保存的真实实验结果，可离线使用。重新计算全部实验：<code>python3 main.py demo --recompute --output results/live_demo</code>。处理自己的图片见项目 README。</p></section>
 <script id="demo-data" type="application/json">__DEMO_DATA__</script>
 <script>
 'use strict';

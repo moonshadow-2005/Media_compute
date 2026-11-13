@@ -18,6 +18,6 @@ RGB 转灰度，不额外模糊；参数与预处理保持一致，避免通过�
 结论限于这些人工插画。真实图像中微弱轮廓可能与纹理一起被抹除；灰度 Canny 也可能漏掉
 亮度接近但颜色不同的边界。较大的 lambda 会合并小结构，见结构平滑实验中的失败现象。
 
-复现：在项目根目录运行 `python3 experiment_edges.py --output results/edges_rerun`。
+复现：在项目根目录运行 `python3 -m experiments.edges --output results/edges_rerun`。
 每个子目录包含输入、平滑图、边缘图、原始浮点输出以及全部运行参数和耗时。
 检测器接口依据：[OpenCV Canny 文档](https://docs.opencv.org/4.13.0/da/d22/tutorial_py_canny.html)。

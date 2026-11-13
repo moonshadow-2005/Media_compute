@@ -1,22 +1,22 @@
 # 第 4 题逐项验收
 
-依据：`media_computing_topic4_and_course_requirements.md` 的题目 4 与统一交付要求。
+依据：`docs/course_requirements.md` 的题目 4 与统一交付要求。
 日期：2026-11-14。下列“通过”表示代码及交付材料已经检查，不代表课程组评分或现场展示已完成。
 
 | 要求 | 当前证据 | 核验结果 |
 |---|---|---|
-| 自行实现周期差分 | `l0_smoothing.py`、手算边界及伴随内积测试 | 通过 |
+| 自行实现周期差分 | `l0_smoothing/core.py`、手算边界及伴随内积测试 | 通过 |
 | 自行实现彩色联合阈值 | `joint_threshold`、跨通道和方向的联合阈值测试 | 通过 |
 | 自行实现 FFT 闭式更新 | `fft_update`、独立 3×5 稠密系统对照 | 通过，容差 1e-12 |
 | 自行实现交替优化 | `smooth`、迭代次数及均值／复现测试 | 通过 |
 | 4.1.1 结构平滑、lambda/kappa 控制、多组图像（18 分） | 三组输入、18 组结果、三张参数对照图及 CSV | 通过；细纹理抑制和强平滑失败现象均保留 |
-| 4.1.2 灰度／彩色读写、保存及复现（6 分） | `main.py`、`image_io.py`、`results/cli_example` | 通过；灰度和彩色均测试，运行包移动和原图删除后仍可复现 |
-| 4.1.3 同参数边缘提取应用（6 分） | `edge_application.py`、`results/edges` | 通过；共享 Canny 参数，保存原图／平滑图的边缘及对照分析 |
+| 4.1.2 灰度／彩色读写、保存及复现（6 分） | `main.py`、`l0_smoothing/image_io.py`、`results/cli_example` | 通过；灰度和彩色均测试，运行包移动和原图删除后仍可复现 |
+| 4.1.3 同参数边缘提取应用（6 分） | `l0_smoothing/edges.py`、`results/edges` | 通过；共享 Canny 参数，保存原图／平滑图的边缘及对照分析 |
 | 4.2.1 Clip-art JPEG 去伪影（6 分） | 彩色卡通、灰度线条；Q=10/30，各四档 lambda | 通过；真实 JPEG、16 组恢复、质量与参数记录齐全 |
 | 4.2.2 干净／压缩／恢复图、局部、PSNR／SSIM（4 分） | `results/jpeg`、24 条全图和局部指标、指标定义及分析 | 通过；使用同一干净参考，含弱平滑及细节损失结果 |
 | 输入归一化、参数、迭代次数、耗时 | 各运行包 JSON、平滑 CSV、JPEG JSON | 通过 |
 | 可运行代码、依赖与操作说明 | `requirements.txt`、`README.md` | 通过 |
-| 算法展示 Demo | `demo.py`、`results/demo/index.html` | 通过；实际重算链路成功，37 组参数选择绑定正确 |
+| 算法展示 Demo | `l0_smoothing/demo.py`、`results/demo/index.html` | 通过；实际重算链路成功，37 组参数选择绑定正确 |
 | 报告：原理与实现 | `REPORT.md` 第 2 节 | 公式、步骤、代码映射与验证齐全 |
 | 报告：数据、参数与运行说明 | `REPORT.md` 第 3 节 | 来源、预处理、版本、命令与随机种子说明齐全 |
 | 报告：结果与分析 | `REPORT.md` 第 4 节及嵌入结果图 | 参数对照、数值、局部、效率与失败案例齐全 |
@@ -29,11 +29,14 @@
 
 - `python3 -m pytest -q`：18 项通过，覆盖数学子问题、输入输出、复现、边缘、JPEG、指标与 Demo 数据绑定。
 - `python3 main.py replay results/cli_example/run.json --output /tmp/l0-replay-stage2`：显示结果 SHA256 一致。
-- `python3 demo.py --recompute --output /tmp/l0-complete-demo`：结构平滑、边缘、JPEG 和评估全部成功。
+- `python3 main.py demo --recompute --output /tmp/l0-complete-demo`：结构平滑、边缘、JPEG 和评估全部成功。
 - 将完整重跑的 77 张 PNG 与已保存实验逐像素比较：全部一致。
 - 将完整重跑的两份 CSV 与已保存记录比较，排除 `elapsed_seconds`：全部一致。
 - 已查看风景结构平滑、边缘四面板、两组 JPEG 质量 10 的局部放大图。
 - 已核对报告插图路径、目录、三组输入、各参数矩阵和指标表。
+
+目录整理后再次执行 18 项测试与全部实验重算；统一入口为 `main.py`，
+核心代码位于 `l0_smoothing/`，批量实验位于 `experiments/`，分析文档集中于 `docs/experiments/`。
 
 ## 核验边界
 

@@ -3,9 +3,9 @@
 import argparse
 from pathlib import Path
 
-from edge_application import add_edges
-from image_io import write_json
-from main import run_smoothing
+from l0_smoothing.edges import add_edges
+from l0_smoothing.image_io import write_json
+from l0_smoothing.pipeline import run_smoothing
 
 
 def main():

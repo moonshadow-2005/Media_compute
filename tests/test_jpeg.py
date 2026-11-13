@@ -2,8 +2,8 @@ import numpy as np
 import pytest
 from PIL import Image
 
-from image_io import load_image
-from jpeg_application import restore_jpeg
+from l0_smoothing.image_io import load_image
+from l0_smoothing.jpeg import restore_jpeg
 
 
 def test_jpeg_pipeline_uses_real_compressed_input_and_records_parameters(tmp_path):

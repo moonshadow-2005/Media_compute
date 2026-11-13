@@ -2,8 +2,8 @@ import numpy as np
 import pytest
 from PIL import Image
 
-from edge_application import add_edges, canny, contour_measures
-from main import run_smoothing
+from l0_smoothing.edges import add_edges, canny, contour_measures
+from l0_smoothing.pipeline import run_smoothing
 
 
 def test_same_detector_and_major_contour_retention(tmp_path):

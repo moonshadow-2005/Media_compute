@@ -5,7 +5,7 @@ from pathlib import Path
 
 from PIL import Image, ImageDraw
 
-from jpeg_application import restore_jpeg
+from l0_smoothing.jpeg import restore_jpeg
 
 
 def make_line_art(path):

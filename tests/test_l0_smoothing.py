@@ -2,7 +2,7 @@ import unittest
 
 import numpy as np
 
-from l0_smoothing import (difference_spectrum, fft_update, gradient_adjoint,
+from l0_smoothing.core import (difference_spectrum, fft_update, gradient_adjoint,
                           joint_threshold, periodic_gradient, smooth)
 
 

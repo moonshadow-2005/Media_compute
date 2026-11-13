@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from quality_metrics import measure_quality
+from l0_smoothing.metrics import measure_quality
 
 
 def test_identity_and_constant_offset_analytic_values():
