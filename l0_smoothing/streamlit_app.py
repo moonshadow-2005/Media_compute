@@ -11,6 +11,47 @@ import streamlit as st
 from l0_smoothing.interactive import SAMPLES, compute
 
 
+PARAMETER_HELP = {
+    'lambda_': (
+        '控制保留原图与减少非零梯度之间的权衡。调大通常会去掉更多纹理、让平坦区域更连贯，'
+        '但细线、弱边界和小结构也可能消失；调小更接近原图、保留更多细节，也会留下更多纹理或伪影。'
+        '效果不保证随数值增大而变好。'
+    ),
+    'kappa': (
+        '每轮迭代把内部惩罚参数 β 乘以 κ。调小、接近 1 时，更新更细、迭代更多、耗时通常更长；'
+        '调大则迭代较少、通常更快，但求解路径和最终结果可能改变。它不是平滑强度，更多迭代也不保证效果更好；默认 2。'
+    ),
+    'low': (
+        'Canny 的弱边缘下限：低于该阈值的梯度会被舍弃；介于低、高阈值之间的弱边缘，'
+        '只有连接到强边缘时才会保留。调低可能连接更多细弱轮廓，也可能引入纹理边缘；'
+        '调高会减少弱边缘，但可能使轮廓断开。必须小于高阈值，两幅图使用同一数值。'
+    ),
+    'high': (
+        'Canny 判定强边缘的阈值。调高通常只留下更强的轮廓，弱轮廓可能漏检；'
+        '调低会产生更多强边缘候选，能找出较弱结构，也可能带入更多杂乱边缘。'
+        '必须大于低阈值，两幅图使用同一数值。'
+    ),
+    'quality': (
+        '控制现场生成的 JPEG 输入质量，范围 1–95。调低会加强有损压缩，通常出现更多块效应、'
+        '边缘振铃和颜色失真，恢复更困难；调高通常更接近参考图、伪影较少，但文件通常更大。'
+        '这改变的是压缩输入，不是 L0 平滑强度，也不是保留信息的百分比。'
+    ),
+    'beta_max': (
+        '交替优化的停止阈值。内部 β 用于约束图像梯度接近筛选后的辅助梯度，β 增长到此值后停止。'
+        '调大通常会增加迭代和耗时，但不保证画质更好；调小会提早结束，结果可能还未稳定。'
+        '通常保留默认 100000，主要通过 λ 控制平滑程度。'
+    ),
+    'crop_x': (
+        '选择局部对照的左右边界，0% 是最左侧、100% 是最右侧。缩小两个端点的间距会显示更窄的区域，'
+        '在同样显示宽度下细节更大；整体移动两个端点可观察其他位置。仅改变查看区域，不重新计算或修改输出图片。'
+    ),
+    'crop_y': (
+        '选择局部对照的上下边界，0% 是顶部、100% 是底部。缩小两个端点的间距可聚焦更短的区域，'
+        '整体移动两个端点可观察上方或下方。仅改变查看区域，不重新计算或修改输出图片。'
+    ),
+}
+
+
 def result_archive(result):
     buffer = io.BytesIO()
     with zipfile.ZipFile(buffer, 'w', zipfile.ZIP_DEFLATED) as archive:
@@ -27,28 +68,35 @@ def main():
     labels = {'结构平滑': 'smooth', '边缘提取': 'edges', 'JPEG 去伪影': 'jpeg'}
     with st.sidebar:
         st.header('输入与参数')
-        mode = labels[st.selectbox('任务', list(labels), key='mode')]
+        st.caption('悬停参数旁的问号，可查看含义及调节后的预期变化。')
+        mode = labels[st.selectbox('任务', list(labels), key='mode',
+                                   help='结构平滑对比原图与平滑图；边缘提取对比两路同参数 Canny；JPEG 去伪影先生成压缩图再恢复。切换任务会改变计算流程和显示结果。')]
         uploaded = st.file_uploader('上传自己的图片', type=['png', 'jpg', 'jpeg', 'bmp', 'webp', 'tif', 'tiff'],
-                                    max_upload_size=8, key='upload')
+                                    max_upload_size=8, key='upload',
+                                    help='上传后替代内置样例，清除上传文件后恢复样例。JPEG 模式会把上传图当作参考图，再进行一次 JPEG 压缩。最长边超过 768 像素会缩小预览，原文件不变。')
         sample = st.selectbox('内置样例', list(SAMPLES), format_func=lambda key: SAMPLES[key][0],
-                              disabled=uploaded is not None, key='sample')
+                              disabled=uploaded is not None, key='sample',
+                              help='改变算法的输入图片。风景和几何图适合观察纹理与轮廓，灰度阶跃适合观察主边界，灰度线条适合观察细线损失。JPEG 模式使用对应的干净参考图。')
         st.caption('上传图片仅用于本次计算；最长边超过 768 像素会缩小预览，原文件不修改。')
         lam = st.slider('λ · 平滑强度', .0001, .1000, .0200, .0001, format='%.4f', key='lambda_',
-                        help='增大通常去除更多细节，也可能改变小结构。')
+                        help=PARAMETER_HELP['lambda_'])
         kappa = st.slider('κ · 惩罚增长率', 1.05, 4.00, 2.00, .05, key='kappa',
-                          help='越接近 1，迭代越多，计算时间通常越长。')
+                          help=PARAMETER_HELP['kappa'])
         low, high, quality = 20, 40, 10
         if mode == 'edges':
-            low = st.slider('Canny 低阈值', 0, 255, 20, key='low')
-            high = st.slider('Canny 高阈值', 1, 255, 40, key='high')
+            low = st.slider('Canny 低阈值', 0, 255, 20, key='low', help=PARAMETER_HELP['low'])
+            high = st.slider('Canny 高阈值', 1, 255, 40, key='high', help=PARAMETER_HELP['high'])
             st.caption('原图与平滑图使用同一组检测参数。')
         elif mode == 'jpeg':
-            quality = st.slider('JPEG 质量', 1, 95, 10, key='quality')
+            quality = st.slider('JPEG 质量', 1, 95, 10, key='quality', help=PARAMETER_HELP['quality'])
             st.caption('将选定图片当作参考，现场生成 JPEG，再执行恢复。')
         with st.expander('高级参数'):
-            beta_max = st.number_input('β 最大值', 1.0, 100000.0, 100000.0, 1000.0, key='beta_max')
-        auto = st.checkbox('参数变化后自动计算', value=True, key='auto')
-        run = st.button('重新计算', type='primary', key='run')
+            beta_max = st.number_input('β 最大值', 1.0, 100000.0, 100000.0, 1000.0, key='beta_max',
+                                        help=PARAMETER_HELP['beta_max'])
+        auto = st.checkbox('参数变化后自动计算', value=True, key='auto',
+                           help='勾选后，输入或算法参数变化即重新计算；取消后可先调整多个参数，再点击“重新计算”。关闭时下方保留上次结果，并提示参数尚未应用。')
+        run = st.button('重新计算', type='primary', key='run',
+                        help='用当前输入和参数实际运行一次算法；即使参数不变也会重跑，并更新本次耗时和运行记录。')
 
     uploaded_bytes = uploaded.getvalue() if uploaded is not None else None
     payload = dict(mode=mode, sample=sample, lambda_=lam, kappa=kappa, beta_max=beta_max,
@@ -77,8 +125,8 @@ def main():
     columns = st.columns(4)
     columns[0].metric('迭代次数', record['iterations'])
     columns[1].metric('算法耗时', f"{record['algorithm_seconds']:.3f} s")
-    columns[2].metric('λ', f"{record['parameters']['lambda_']:.4f}")
-    columns[3].metric('κ', f"{record['parameters']['kappa']:.2f}")
+    columns[2].metric('λ', f"{record['parameters']['lambda_']:.4f}", help=PARAMETER_HELP['lambda_'])
+    columns[3].metric('κ', f"{record['parameters']['kappa']:.2f}", help=PARAMETER_HELP['kappa'])
     width, height = preprocessing['processed_size']
     st.caption(f"本次输入：{preprocessing['source']} · {width} × {height} · 实际计算次数：{st.session_state.compute_count}")
     if preprocessing['resized']:
@@ -103,8 +151,8 @@ def main():
                 rows.append({'图像': name, 'PSNR / dB': '∞' if psnr == 'Infinity' else f'{psnr:.4f}', 'SSIM': f"{values['ssim']:.5f}"})
             st.table(rows)
     with st.expander('局部放大对照'):
-        x_range = st.slider('横向范围（%）', 0, 100, (25, 75), key='crop_x')
-        y_range = st.slider('纵向范围（%）', 0, 100, (25, 75), key='crop_y')
+        x_range = st.slider('横向范围（%）', 0, 100, (25, 75), key='crop_x', help=PARAMETER_HELP['crop_x'])
+        y_range = st.slider('纵向范围（%）', 0, 100, (25, 75), key='crop_y', help=PARAMETER_HELP['crop_y'])
         box = (width*x_range[0]//100, height*y_range[0]//100, width*x_range[1]//100, height*y_range[1]//100)
         if box[0] < box[2] and box[1] < box[3]:
             for column, item in zip(st.columns(len(result['panels'])), result['panels']):
