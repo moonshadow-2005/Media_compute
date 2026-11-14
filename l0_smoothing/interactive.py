@@ -1,4 +1,4 @@
-"""交互式 Demo 的计算层：复用核心算法，不读取预计算结果。"""
+"""交互计算层：现场运行核心算法，作者参考仅用于显示与核验。"""
 
 import io
 import json
@@ -20,8 +20,15 @@ PHOTO_SOURCES = {
     item['key']: item
     for item in json.loads((PROJECT / 'data/photos/sources.json').read_text(encoding='utf-8'))['images']
 }
-DEFAULT_SAMPLE = 'photo_coffee'
+PAPER_SOURCES = {
+    item['key']: item
+    for item in json.loads((PROJECT / 'data/paper_examples/sources.json').read_text(encoding='utf-8'))['images']
+}
+SOURCE_INFO = {**PAPER_SOURCES, **PHOTO_SOURCES}
+DEFAULT_SAMPLE = 'paper_beach'
 SAMPLES = {
+    **{key: (item['label'], 'data/paper_examples/' + item['file'], 'data/paper_examples/' + item['file'])
+       for key, item in PAPER_SOURCES.items()},
     **{key: (item['label'], 'data/photos/' + item['file'], 'data/photos/' + item['file'])
        for key, item in PHOTO_SOURCES.items()},
     'color_landscape': ('彩色风景', 'data/illustrations/color_landscape_input.png', 'data/illustrations/color_landscape_clean.png'),
@@ -47,6 +54,7 @@ def number(payload, key, default, low, high):
 
 
 def read_source(payload, mode, uploaded_bytes=None):
+    sample = None
     if uploaded_bytes is not None:
         if not isinstance(uploaded_bytes, bytes):
             raise ValueError('上传内容必须是图片文件字节')
@@ -67,7 +75,9 @@ def read_source(payload, mode, uploaded_bytes=None):
             raise ValueError('请使用 8 位灰度或彩色图片')
         oriented = ImageOps.exif_transpose(original)
         original_size = list(oriented.size)
-        oriented.thumbnail((MAX_SIDE, MAX_SIDE), Image.Resampling.LANCZOS)
+        # 两张已知大小的论文样例保留原尺寸，才能与作者公开结果逐像素比较。
+        if sample not in PAPER_SOURCES:
+            oriented.thumbnail((MAX_SIDE, MAX_SIDE), Image.Resampling.LANCZOS)
         if oriented.mode == 'CMYK':
             oriented = oriented.convert('RGB')
         normalized = io.BytesIO()
@@ -77,8 +87,8 @@ def read_source(payload, mode, uploaded_bytes=None):
     preprocessing = {'source': label, 'original_size': original_size,
                      'processed_size': [image.shape[1], image.shape[0]],
                      'resized': original_size != [image.shape[1], image.shape[0]]}
-    if uploaded_bytes is None and sample in PHOTO_SOURCES:
-        preprocessing['attribution'] = dict(PHOTO_SOURCES[sample])
+    if uploaded_bytes is None and sample in SOURCE_INFO:
+        preprocessing['attribution'] = dict(SOURCE_INFO[sample])
     return image, preprocessing
 
 
@@ -118,6 +128,23 @@ def compute(payload, uploaded_bytes=None):
     displayed = to_uint8(result.image).astype(np.float64) / 255.
     panels = [panel('输入图', source, 'input.png'), panel('L0 平滑结果', displayed, 'smoothed.png')]
     metrics = {}
+    reference_record = None
+    if mode == 'smooth' and uploaded_bytes is None and payload.get('sample', DEFAULT_SAMPLE) in PAPER_SOURCES:
+        reference = PAPER_SOURCES[payload.get('sample', DEFAULT_SAMPLE)]['reference']
+        reference_image = load_image(PROJECT / 'data/paper_examples' / reference['file'])
+        actual_pixels = to_uint8(displayed)
+        reference_pixels = to_uint8(reference_image)
+        if actual_pixels.shape != reference_pixels.shape:
+            raise ValueError('作者参考图与当前计算结果尺寸不一致')
+        difference = np.abs(actual_pixels.astype(np.int16) - reference_pixels.astype(np.int16))
+        panels.append(panel('作者公开结果（固定 λ=0.02）', reference_image, 'author_reference.png'))
+        reference_record = {
+            **reference,
+            'parameters_match': {'lambda_': lam, 'kappa': kappa, 'beta_max': beta_max} == reference['parameters'],
+            'max_abs_8bit': int(difference.max()),
+            'mean_abs_8bit': float(difference.mean()),
+            'different_pixels': int(np.count_nonzero(np.any(difference != 0, axis=-1))),
+        }
     if mode == 'edges':
         before, after = canny(source, low, high), canny(displayed, low, high)
         panels += [panel('原图边缘', before, 'edges_input.png'), panel('平滑后边缘', after, 'edges_smoothed.png')]
@@ -142,6 +169,8 @@ def compute(payload, uploaded_bytes=None):
     }
     if mode == 'edges':
         metadata['canny'] = dict(low=low, high=high, apertureSize=3, L2gradient=True)
+    if reference_record is not None:
+        metadata['author_reference'] = reference_record
     if mode == 'jpeg':
         metadata['jpeg'] = dict(quality=int(quality), subsampling=0, optimize=False, progressive=False)
     return {'panels': panels, 'metadata': metadata}

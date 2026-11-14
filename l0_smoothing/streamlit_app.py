@@ -8,7 +8,7 @@ import zipfile
 from PIL import Image
 import streamlit as st
 
-from l0_smoothing.interactive import DEFAULT_SAMPLE, PHOTO_SOURCES, SAMPLES, compute
+from l0_smoothing.interactive import DEFAULT_SAMPLE, PAPER_SOURCES, SOURCE_INFO, SAMPLES, compute
 
 
 PARAMETER_HELP = {
@@ -77,9 +77,11 @@ def main():
         sample = st.selectbox('内置样例', list(SAMPLES), format_func=lambda key: SAMPLES[key][0],
                               index=list(SAMPLES).index(DEFAULT_SAMPLE),
                               disabled=uploaded is not None, key='sample',
-                              help='前五项为真实拍摄的照片，可观察木纹、毛发、人像与室外场景。后面的人工插画用于受控对照。JPEG 模式以所选图为参考再次压缩，不代表原始照片完全没有噪声或压缩损失。')
-        if uploaded is None and sample in PHOTO_SOURCES:
-            st.caption(PHOTO_SOURCES[sample]['note'])
+                              help='前两项是论文作者公开的海滩、岩石样例，保留原尺寸；其后为五张真实照片和人工插画。JPEG 模式以所选图为参考再次压缩，不代表原图完全没有噪声或压缩损失。')
+        if uploaded is None and sample in SOURCE_INFO:
+            st.caption(SOURCE_INFO[sample]['note'])
+        if uploaded is None and sample in PAPER_SOURCES:
+            st.caption('论文样例按原尺寸计算；结构平滑模式同时显示作者 λ=0.02 的固定参考结果。')
         st.caption('上传图片仅用于本次计算；最长边超过 768 像素会缩小预览，原文件不修改。')
         lam = st.slider('λ · 平滑强度', .0001, .1000, .0200, .0001, format='%.4f', key='lambda_',
                         help=PARAMETER_HELP['lambda_'])
@@ -143,6 +145,20 @@ def main():
         with column:
             st.subheader(item['title'])
             st.image(item['image'], width='stretch')
+
+    if 'author_reference' in record:
+        reference = record['author_reference']
+        st.caption('作者参考固定为 λ=0.02；核对配置为 κ=2、β 最大值=100000。修改参数不会改变参考图。')
+        if not reference['parameters_match']:
+            st.info('当前参数与核对配置不同，以下差异仅供观察，不用于判定复现是否一致。')
+        elif reference['different_pixels'] == 0:
+            st.success('本次计算与作者公开结果逐像素完全一致。')
+        else:
+            st.warning('本次计算与作者公开结果存在像素差异，请查看差异数值。')
+        comparison_columns = st.columns(3)
+        comparison_columns[0].metric('最大像素差（0–255）', reference['max_abs_8bit'])
+        comparison_columns[1].metric('平均像素差（0–255）', f"{reference['mean_abs_8bit']:.6f}")
+        comparison_columns[2].metric('不同像素数', reference['different_pixels'])
 
     metrics = record['metrics']
     if record['mode'] == 'edges':

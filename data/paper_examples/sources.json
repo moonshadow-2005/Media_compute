@@ -1,0 +1,56 @@
+{
+  "imported_at": "2026-11-14T08:07:18.341668+00:00",
+  "processing": "复制前一轮从作者网站下载的原始 PNG 字节，不缩放、不改色。",
+  "images": [
+    {
+      "key": "paper_beach",
+      "file": "beach_input.png",
+      "label": "论文样例 · 海滩",
+      "author": "Li Xu、Cewu Lu、Yi Xu、Jiaya Jia 项目页（原摄影者未单独标注）",
+      "license": "论文项目公开示例，未单独标注图片授权许可",
+      "source_url": "https://jiaya.me/file/archive/projects/L0smoothing/results/Smoothing/beach/beach.png",
+      "documentation_url": "https://jiaya.me/file/archive/projects/L0smoothing/ImageSmoothing.htm",
+      "sha256": "9c03c82a6f28dd71e8d68339e82512eaaeaa183e1afa96e28ea4da5de5fd9312",
+      "size": [
+        800,
+        533
+      ],
+      "note": "按原尺寸计算。λ=0.02、κ=2、β 最大值=100000 时可核对作者公开结果；调参后仍可观察与该固定参考的差异。",
+      "reference": {
+        "file": "beach_author.png",
+        "source_url": "https://jiaya.me/file/archive/projects/L0smoothing/results/Smoothing/beach/0.02_s.png",
+        "sha256": "67a39ad22c17634c5e24ac0284a3fa12ab668cb4c005e5f051afc3ca5a47a0a4",
+        "parameters": {
+          "lambda_": 0.02,
+          "kappa": 2.0,
+          "beta_max": 100000.0
+        }
+      }
+    },
+    {
+      "key": "paper_rock2",
+      "file": "rock2_input.png",
+      "label": "论文样例 · 岩石",
+      "author": "Li Xu、Cewu Lu、Yi Xu、Jiaya Jia 项目页（原摄影者未单独标注）",
+      "license": "论文项目公开示例，未单独标注图片授权许可",
+      "source_url": "https://jiaya.me/file/archive/projects/L0smoothing/results/Smoothing/rock2/rock2.png",
+      "documentation_url": "https://jiaya.me/file/archive/projects/L0smoothing/ImageSmoothing.htm",
+      "sha256": "52d46105b8288bcd8b3cb5bf7ccd2b75423b86102ba1e399b26bb5ff71190f2f",
+      "size": [
+        876,
+        584
+      ],
+      "note": "按原尺寸计算。λ=0.02、κ=2、β 最大值=100000 时可核对作者公开结果；调参后仍可观察与该固定参考的差异。",
+      "reference": {
+        "file": "rock2_author.png",
+        "source_url": "https://jiaya.me/file/archive/projects/L0smoothing/results/Smoothing/rock2/0.02_s.png",
+        "sha256": "09a2ab7b90e7db05524f5498438274dcc68a54272e1d273bd22779a2ba20568b",
+        "parameters": {
+          "lambda_": 0.02,
+          "kappa": 2.0,
+          "beta_max": 100000.0
+        }
+      }
+    }
+  ]
+}

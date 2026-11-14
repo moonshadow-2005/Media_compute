@@ -9,7 +9,7 @@ from streamlit.testing.v1 import AppTest
 
 from l0_smoothing.core import smooth
 from l0_smoothing.image_io import load_image, to_uint8
-from l0_smoothing.interactive import DEFAULT_SAMPLE, PHOTO_SOURCES, PROJECT, compute
+from l0_smoothing.interactive import DEFAULT_SAMPLE, PAPER_SOURCES, SOURCE_INFO, PROJECT, compute
 from l0_smoothing.streamlit_app import result_archive
 
 
@@ -61,6 +61,7 @@ def test_streamlit_switches_modes_and_validates_canny():
     app = start_app()
     app.selectbox(key='mode').set_value('边缘提取').run()
     assert app.session_state['result']['metadata']['mode'] == 'edges'
+    assert 'author_reference' not in app.session_state['result']['metadata']
     app.slider(key='low').set_value(100).run()
     assert app.error and not app.exception
     assert 'low < high' in app.error[0].value
@@ -72,6 +73,7 @@ def test_streamlit_switches_modes_and_validates_canny():
     app.slider(key='lambda_').set_value(.01).run()
     record = app.session_state['result']['metadata']
     assert not app.exception and record['jpeg']['quality'] == 30
+    assert 'author_reference' not in record
     # 真实照片的细节可能被抹掉，不能把 PSNR 必然改善当作正确性要求。
     for values in record['metrics'].values():
         assert np.isfinite(values['psnr_db'])
@@ -86,6 +88,7 @@ def test_streamlit_upload_and_clear_input():
     assert not app.exception
     record = app.session_state['result']['metadata']
     assert record['preprocessing']['source'] == '上传图片'
+    assert 'author_reference' not in record
     assert record['preprocessing']['processed_size'] == [36, 24]
     assert app.selectbox(key='sample').disabled
     app.slider(key='lambda_').set_value(.03).run()
@@ -93,8 +96,27 @@ def test_streamlit_upload_and_clear_input():
     app.file_uploader(key='upload').clear().run()
     assert not app.exception and not app.selectbox(key='sample').disabled
     preprocessing = app.session_state['result']['metadata']['preprocessing']
-    assert preprocessing['source'] == PHOTO_SOURCES[DEFAULT_SAMPLE]['label']
-    assert preprocessing['attribution']['sha256'] == PHOTO_SOURCES[DEFAULT_SAMPLE]['sha256']
+    assert preprocessing['source'] == SOURCE_INFO[DEFAULT_SAMPLE]['label']
+    assert preprocessing['attribution']['sha256'] == SOURCE_INFO[DEFAULT_SAMPLE]['sha256']
+
+
+@pytest.mark.parametrize('sample', list(PAPER_SOURCES))
+def test_author_reference_matches_live_full_size_calculation(sample):
+    result = compute({'sample': sample})
+    record = result['metadata']
+    assert record['preprocessing']['processed_size'] == PAPER_SOURCES[sample]['size']
+    assert not record['preprocessing']['resized']
+    reference = record['author_reference']
+    assert reference['parameters_match']
+    assert reference['max_abs_8bit'] == reference['different_pixels'] == 0
+    changed = compute({'sample': sample, 'lambda_': .01})
+    assert not changed['metadata']['author_reference']['parameters_match']
+    assert changed['metadata']['author_reference']['different_pixels'] > 0
+    assert changed['panels'][1]['image'] != result['panels'][1]['image']
+    assert changed['panels'][2]['image'] == result['panels'][2]['image']
+    with zipfile.ZipFile(io.BytesIO(result_archive(result))) as archive:
+        assert archive.read('author_reference.png') == result['panels'][2]['image']
+        assert json.loads(archive.read('parameters.json'))['author_reference'] == reference
 
 
 def test_preview_resize_and_invalid_inputs():
