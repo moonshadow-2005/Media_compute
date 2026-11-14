@@ -1,6 +1,7 @@
 """交互式 Demo 的计算层：复用核心算法，不读取预计算结果。"""
 
 import io
+import json
 import math
 from datetime import datetime, timezone
 from pathlib import Path
@@ -15,7 +16,14 @@ from .image_io import environment, load_image, to_uint8
 from .metrics import measure_quality
 
 PROJECT = Path(__file__).resolve().parents[1]
+PHOTO_SOURCES = {
+    item['key']: item
+    for item in json.loads((PROJECT / 'data/photos/sources.json').read_text(encoding='utf-8'))['images']
+}
+DEFAULT_SAMPLE = 'photo_coffee'
 SAMPLES = {
+    **{key: (item['label'], 'data/photos/' + item['file'], 'data/photos/' + item['file'])
+       for key, item in PHOTO_SOURCES.items()},
     'color_landscape': ('彩色风景', 'data/illustrations/color_landscape_input.png', 'data/illustrations/color_landscape_clean.png'),
     'gray_step': ('灰度阶跃', 'data/illustrations/gray_step_input.png', 'data/illustrations/gray_step_clean.png'),
     'color_shapes': ('彩色几何', 'data/illustrations/color_shapes_input.png', 'data/illustrations/color_shapes_clean.png'),
@@ -47,7 +55,7 @@ def read_source(payload, mode, uploaded_bytes=None):
         stream = io.BytesIO(uploaded_bytes)
         label = '上传图片'
     else:
-        sample = payload.get('sample', 'color_landscape')
+        sample = payload.get('sample', DEFAULT_SAMPLE)
         if sample not in SAMPLES:
             raise ValueError('请选择内置样例或上传图片')
         label, input_path, clean_path = SAMPLES[sample]
@@ -66,9 +74,12 @@ def read_source(payload, mode, uploaded_bytes=None):
         oriented.save(normalized, format='PNG')
         normalized.seek(0)
         image = load_image(normalized)
-    return image, {'source': label, 'original_size': original_size,
-                   'processed_size': [image.shape[1], image.shape[0]],
-                   'resized': original_size != [image.shape[1], image.shape[0]]}
+    preprocessing = {'source': label, 'original_size': original_size,
+                     'processed_size': [image.shape[1], image.shape[0]],
+                     'resized': original_size != [image.shape[1], image.shape[0]]}
+    if uploaded_bytes is None and sample in PHOTO_SOURCES:
+        preprocessing['attribution'] = dict(PHOTO_SOURCES[sample])
+    return image, preprocessing
 
 
 def panel(title, array, filename):

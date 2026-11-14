@@ -1,0 +1,87 @@
+{
+  "collection": "scikit-image v0.25.2 example photographs",
+  "downloaded_at": "2026-11-14T05:57:08.718665+00:00",
+  "processing": "原始下载字节，未经本项目改色、裁剪、缩放或生成。",
+  "images": [
+    {
+      "key": "photo_coffee",
+      "file": "coffee.png",
+      "label": "真实照片 · 咖啡杯",
+      "author": "Rachel Michetti / Pikolo Espresso Bar",
+      "license": "CC0",
+      "source_url": "https://raw.githubusercontent.com/scikit-image/scikit-image/v0.25.2/skimage/data/coffee.png",
+      "documentation_url": "https://scikit-image.org/docs/0.25.x/api/skimage.data.html#skimage.data.coffee",
+      "sha256": "cc02f8ca188b167c775a7101b5d767d1e71792cf762c33d6fa15a4599b5a8de7",
+      "size": [
+        600,
+        400
+      ],
+      "mode": "RGB",
+      "note": "观察杯沿、拉花与桌面木纹。"
+    },
+    {
+      "key": "photo_chelsea",
+      "file": "chelsea.png",
+      "label": "真实照片 · 猫",
+      "author": "Stefan van der Walt",
+      "license": "CC0",
+      "source_url": "https://raw.githubusercontent.com/scikit-image/scikit-image/v0.25.2/skimage/data/chelsea.png",
+      "documentation_url": "https://scikit-image.org/docs/0.25.x/api/skimage.data.html#skimage.data.chelsea",
+      "sha256": "596aa1e7cb875eb79f437e310381d26b338a81c2da23439704a73c4651e8c4bb",
+      "size": [
+        451,
+        300
+      ],
+      "mode": "RGB",
+      "note": "观察毛发纹理、眼睛轮廓和胡须是否被抹掉。"
+    },
+    {
+      "key": "photo_astronaut",
+      "file": "astronaut.png",
+      "label": "真实照片 · 宇航员",
+      "author": "NASA",
+      "license": "Public domain",
+      "source_url": "https://raw.githubusercontent.com/scikit-image/scikit-image/v0.25.2/skimage/data/astronaut.png",
+      "documentation_url": "https://scikit-image.org/docs/0.25.x/api/skimage.data.html#skimage.data.astronaut",
+      "sha256": "88431cd9653ccd539741b555fb0a46b61558b301d4110412b5bc28b5e3ea6cb5",
+      "size": [
+        512,
+        512
+      ],
+      "mode": "RGB",
+      "note": "观察面部、服装纹理与强边界。"
+    },
+    {
+      "key": "photo_camera",
+      "file": "camera.png",
+      "label": "真实照片 · 摄影师（灰度）",
+      "author": "Lav Varshney",
+      "license": "CC0",
+      "source_url": "https://raw.githubusercontent.com/scikit-image/scikit-image/v0.25.2/skimage/data/camera.png",
+      "documentation_url": "https://scikit-image.org/docs/0.25.x/api/skimage.data.html#skimage.data.camera",
+      "sha256": "b0793d2adda0fa6ae899c03989482bff9a42d3d5690fc7e3648f2795d730c23a",
+      "size": [
+        512,
+        512
+      ],
+      "mode": "L",
+      "note": "观察人物轮廓、三脚架细线和背景细节。"
+    },
+    {
+      "key": "photo_rocket",
+      "file": "rocket.jpg",
+      "label": "真实照片 · 火箭发射",
+      "author": "SpaceX",
+      "license": "Public domain",
+      "source_url": "https://raw.githubusercontent.com/scikit-image/scikit-image/v0.25.2/skimage/data/rocket.jpg",
+      "documentation_url": "https://scikit-image.org/docs/0.25.x/api/skimage.data.html#skimage.data.rocket",
+      "sha256": "c2dd0de7c538df8d111e479619b129464d0269d0ae5fd18ca91d33a7fdfea95c",
+      "size": [
+        640,
+        427
+      ],
+      "mode": "RGB",
+      "note": "观察天空渐变、烟雾、塔架和火箭轮廓。"
+    }
+  ]
+}

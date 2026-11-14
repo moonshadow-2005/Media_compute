@@ -8,7 +8,7 @@ import zipfile
 from PIL import Image
 import streamlit as st
 
-from l0_smoothing.interactive import SAMPLES, compute
+from l0_smoothing.interactive import DEFAULT_SAMPLE, PHOTO_SOURCES, SAMPLES, compute
 
 
 PARAMETER_HELP = {
@@ -75,8 +75,11 @@ def main():
                                     max_upload_size=8, key='upload',
                                     help='上传后替代内置样例，清除上传文件后恢复样例。JPEG 模式会把上传图当作参考图，再进行一次 JPEG 压缩。最长边超过 768 像素会缩小预览，原文件不变。')
         sample = st.selectbox('内置样例', list(SAMPLES), format_func=lambda key: SAMPLES[key][0],
+                              index=list(SAMPLES).index(DEFAULT_SAMPLE),
                               disabled=uploaded is not None, key='sample',
-                              help='改变算法的输入图片。风景和几何图适合观察纹理与轮廓，灰度阶跃适合观察主边界，灰度线条适合观察细线损失。JPEG 模式使用对应的干净参考图。')
+                              help='前五项为真实拍摄的照片，可观察木纹、毛发、人像与室外场景。后面的人工插画用于受控对照。JPEG 模式以所选图为参考再次压缩，不代表原始照片完全没有噪声或压缩损失。')
+        if uploaded is None and sample in PHOTO_SOURCES:
+            st.caption(PHOTO_SOURCES[sample]['note'])
         st.caption('上传图片仅用于本次计算；最长边超过 768 像素会缩小预览，原文件不修改。')
         lam = st.slider('λ · 平滑强度', .0001, .1000, .0200, .0001, format='%.4f', key='lambda_',
                         help=PARAMETER_HELP['lambda_'])
@@ -129,6 +132,10 @@ def main():
     columns[3].metric('κ', f"{record['parameters']['kappa']:.2f}", help=PARAMETER_HELP['kappa'])
     width, height = preprocessing['processed_size']
     st.caption(f"本次输入：{preprocessing['source']} · {width} × {height} · 实际计算次数：{st.session_state.compute_count}")
+    if 'attribution' in preprocessing:
+        attribution = preprocessing['attribution']
+        st.caption(f"图片来源：{attribution['author']} · {attribution['license']} · "
+                   f"[来源说明]({attribution['documentation_url']})")
     if preprocessing['resized']:
         original_w, original_h = preprocessing['original_size']
         st.info(f'交互预览从 {original_w} × {original_h} 缩小至 {width} × {height}；全尺寸计算可使用命令行 smooth。')
