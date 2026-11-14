@@ -1,0 +1,95 @@
+{
+  "imported_at": "2026-11-14T10:44:42.531880+00:00",
+  "images": [
+    {
+      "key": "edge_253036",
+      "file": "EdgeEnhancement_253036.jpg",
+      "label": "边缘示例 · 象群",
+      "kind": "edge_example",
+      "size": [
+        481,
+        321
+      ],
+      "author": "Li Xu、Cewu Lu、Yi Xu、Jiaya Jia 项目页",
+      "license": "公开论文示例，未单独标注图片授权许可",
+      "documentation_url": "https://jiaya.me/file/archive/projects/L0smoothing/EdgeEnhancement.htm",
+      "source_url": "https://jiaya.me/file/archive/projects/L0smoothing/results/EdgeEnhancement/253036.jpg",
+      "sha256": "7a54cba62c89a3e4042c000d9f9333f940e5f7c88e18a11e88a6ea5cf771796a",
+      "note": "观察草地纹理消除后象群和树的轮廓。作者网页展示梯度图，本页面使用相同参数的 Canny 对照。"
+    },
+    {
+      "key": "edge_stop",
+      "file": "EdgeEnhancement_stop.png",
+      "label": "边缘示例 · 停车标志",
+      "kind": "edge_example",
+      "size": [
+        268,
+        229
+      ],
+      "author": "Li Xu、Cewu Lu、Yi Xu、Jiaya Jia 项目页",
+      "license": "公开论文示例，未单独标注图片授权许可",
+      "documentation_url": "https://jiaya.me/file/archive/projects/L0smoothing/EdgeEnhancement.htm",
+      "source_url": "https://jiaya.me/file/archive/projects/L0smoothing/results/EdgeEnhancement/stop.png",
+      "sha256": "deda7750b0dc04f6282cc8a32cf5ff307c7f0d29b0525e7a6b86c26f4a6a71e2",
+      "note": "观察背景纹理与标志边界。作者梯度图不等同于 Canny 二值边缘。"
+    },
+    {
+      "key": "jpeg_9",
+      "file": "JPEG_9.jpg",
+      "label": "JPEG 示例 · 西瓜插画",
+      "kind": "jpeg_compressed",
+      "size": [
+        424,
+        276
+      ],
+      "author": "Li Xu、Cewu Lu、Yi Xu、Jiaya Jia 项目页",
+      "license": "公开论文示例，未单独标注图片授权许可",
+      "documentation_url": "https://jiaya.me/file/archive/projects/L0smoothing/ClipArt.htm",
+      "source_url": "https://jiaya.me/file/archive/projects/L0smoothing/results/JPEG/9.jpg",
+      "sha256": "052fef5976110a1f03b4749cacad51f6d57f3adc4456dba16781eb36275a0637",
+      "note": "已压缩的作者示例，直接恢复，不再次压缩；没有无损参考原图。可从较小 λ 开始观察振铃与细线变化。",
+      "reference": {
+        "file": "JPEG_9_L0.png",
+        "source_url": "https://jiaya.me/file/archive/projects/L0smoothing/results/JPEG/9_L0.png",
+        "sha256": "b070c3787e20974416e5fb545315a40bc8fac5f0de9f9400058a66167cb58bc6"
+      }
+    },
+    {
+      "key": "jpeg_20",
+      "file": "JPEG_20.jpg",
+      "label": "JPEG 示例 · 蜗牛插画",
+      "kind": "jpeg_compressed",
+      "size": [
+        400,
+        261
+      ],
+      "author": "Li Xu、Cewu Lu、Yi Xu、Jiaya Jia 项目页",
+      "license": "公开论文示例，未单独标注图片授权许可",
+      "documentation_url": "https://jiaya.me/file/archive/projects/L0smoothing/ClipArt.htm",
+      "source_url": "https://jiaya.me/file/archive/projects/L0smoothing/results/JPEG/20.jpg",
+      "sha256": "a3e95dd1c2d3030a6d14a3424f59b0d639e3e6c966eac0b753457bbaf41dd779",
+      "note": "已压缩的作者示例，直接恢复，不再次压缩；没有无损参考原图。",
+      "reference": {
+        "file": "JPEG_20_L0.png",
+        "source_url": "https://jiaya.me/file/archive/projects/L0smoothing/results/JPEG/20_L0.png",
+        "sha256": "16e83d4547465891da93b2947dfe61b39cb0e7a25b0778f044b6297d8c66dfa9"
+      }
+    },
+    {
+      "key": "clipart_horse",
+      "file": "horse.png",
+      "label": "公开剪贴画 · 马（有参考）",
+      "kind": "reference_clipart",
+      "size": [
+        400,
+        328
+      ],
+      "author": "Andreas Preuss (marauder) / Openclipart，经 scikit-image 收录",
+      "license": "CC0",
+      "documentation_url": "https://scikit-image.org/docs/0.25.x/api/skimage.data.html#skimage.data.horse",
+      "source_url": "https://raw.githubusercontent.com/scikit-image/scikit-image/v0.25.2/skimage/data/horse.png",
+      "sha256": "c7fb60789fe394c485f842291ea3b21e50d140f39d6dcb5fb9917cc178225455",
+      "note": "外部公开黑白剪贴画。可生成指定质量的 JPEG，再相对该参考 PNG 计算 PSNR／SSIM。"
+    }
+  ]
+}

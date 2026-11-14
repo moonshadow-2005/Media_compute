@@ -9,7 +9,7 @@ from streamlit.testing.v1 import AppTest
 
 from l0_smoothing.core import smooth
 from l0_smoothing.image_io import load_image, to_uint8
-from l0_smoothing.interactive import DEFAULT_SAMPLE, PAPER_SOURCES, SOURCE_INFO, PROJECT, compute
+from l0_smoothing.interactive import DEFAULT_SAMPLE, PAPER_SOURCES, SOURCE_INFO, TASK_SOURCES, PROJECT, compute
 from l0_smoothing.streamlit_app import result_archive
 
 
@@ -69,6 +69,11 @@ def test_streamlit_switches_modes_and_validates_canny():
     assert not app.error and not app.exception
     assert app.session_state['result']['metadata']['canny']['high'] == 150
     app.selectbox(key='mode').set_value('JPEG 去伪影').run()
+    assert app.selectbox(key='sample').value == 'jpeg_9'
+    assert app.slider(key='quality').disabled
+    assert app.number_input(key='quality_input').disabled
+    assert app.session_state['result']['metadata']['jpeg']['recompressed'] is False
+    app.selectbox(key='sample').set_value('clipart_horse').run()
     app.slider(key='quality').set_value(30).run()
     app.slider(key='lambda_').set_value(.01).run()
     record = app.session_state['result']['metadata']
@@ -146,3 +151,66 @@ def test_download_contains_computed_images_and_finite_json():
         assert record['metrics']['compressed']['psnr_db'] == 'Infinity'
         for item in result['panels']:
             assert opened.read(item['filename']) == item['image']
+
+
+@pytest.mark.parametrize('sample', ['jpeg_9', 'jpeg_20'])
+def test_existing_jpeg_is_not_recompressed_or_treated_as_ground_truth(sample):
+    result = compute({'mode': 'jpeg', 'sample': sample, 'quality': 1, 'lambda_': .003})
+    original = load_image(PROJECT/'data/task_examples'/TASK_SOURCES[sample]['file'])
+    actual = np.asarray(Image.open(io.BytesIO(result['panels'][0]['image'])))
+    np.testing.assert_array_equal(actual, to_uint8(original))
+    assert result['metadata']['jpeg'] == dict(input_kind='existing', quality=None, recompressed=False)
+    assert list(result['metadata']['metrics']) == ['note']
+    assert 'author_reference' not in result['metadata']
+    assert result['panels'][-1]['filename'] == 'author_restored.png'
+    # 显式选择已有压缩图时，上传也直接恢复，不能沿用内置样例的作者参考。
+    uploaded = compute({'mode': 'jpeg', 'sample': sample, 'jpeg_source': 'existing', 'lambda_': .003},
+                       (PROJECT/'data/task_examples'/TASK_SOURCES[sample]['file']).read_bytes())
+    assert len(uploaded['panels']) == 2
+    np.testing.assert_array_equal(np.asarray(Image.open(io.BytesIO(uploaded['panels'][0]['image']))), actual)
+
+
+def test_numeric_entry_syncs_slider_manual_calculation_and_crop():
+    app = start_app()
+    app.selectbox(key='sample').set_value('line_art').run()
+    app.checkbox(key='auto').uncheck().run()
+    count = app.session_state['compute_count']
+    app.number_input(key='lambda__input').set_value(.00317).run()
+    assert not app.exception and app.slider(key='lambda_').value == .00317
+    assert app.session_state['compute_count'] == count and app.warning
+    app.number_input(key='kappa_input').set_value(1.85).run()
+    assert app.slider(key='kappa').value == 1.85
+    app.number_input(key='beta_max').set_value(10000.).run()
+    app.button(key='run').click().run()
+    assert app.session_state['result']['metadata']['parameters'] == dict(lambda_=.00317, kappa=1.85, beta_max=10000.)
+    app.slider(key='lambda_').set_value(.02).run()
+    assert app.number_input(key='lambda__input').value == .02
+    count = app.session_state['compute_count']
+    app.number_input(key='crop_x_start').set_value(10).run()
+    assert app.slider(key='crop_x').value == (10, 75)
+    app.slider(key='crop_y').set_value((20, 60)).run()
+    assert app.number_input(key='crop_y_start').value == 20
+    assert app.number_input(key='crop_y_end').value == 60
+    assert app.session_state['compute_count'] == count
+
+
+def test_numeric_canny_and_quality_inputs_reach_computation():
+    app = start_app()
+    app.selectbox(key='mode').set_value('边缘提取').run()
+    assert app.selectbox(key='sample').value == 'edge_253036'
+    app.number_input(key='low_input').set_value(100).run()
+    assert app.error and not app.exception
+    app.number_input(key='high_input').set_value(180).run()
+    assert not app.error and not app.exception
+    assert app.slider(key='high').value == 180
+    assert app.session_state['result']['metadata']['canny']['low'] == 100
+    app.selectbox(key='mode').set_value('JPEG 去伪影').run()
+    app.selectbox(key='sample').set_value('clipart_horse').run()
+    app.number_input(key='quality_input').set_value(17).run()
+    assert not app.exception
+    assert app.slider(key='quality').value == 17
+    assert app.session_state['result']['metadata']['jpeg']['quality'] == 17
+    assert 'compressed' in app.session_state['result']['metadata']['metrics']
+    app.selectbox(key='jpeg_source').set_value('existing').run()
+    assert app.number_input(key='quality_input').disabled
+    assert app.session_state['result']['metadata']['jpeg']['recompressed'] is False

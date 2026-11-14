@@ -28,7 +28,7 @@
 
 ## 执行过的核验
 
-- `python3 -m pytest -q`：28 项通过，覆盖数学子问题、输入输出、复现、边缘、JPEG、指标、离线数据绑定和 Streamlit 现场计算。
+- `python3 -m pytest -q`：32 项通过，覆盖数学子问题、输入输出、复现、边缘、JPEG、指标、离线数据绑定和 Streamlit 现场计算。
 - `python3 main.py replay results/cli_example/run.json --output /tmp/l0-replay-stage2`：显示结果 SHA256 一致。
 - `python3 main.py demo --recompute --output /tmp/l0-complete-demo`：结构平滑、边缘、JPEG 和评估全部成功。
 - 将完整重跑的 77 张 PNG 与已保存实验逐像素比较：全部一致。

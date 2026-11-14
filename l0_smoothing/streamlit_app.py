@@ -8,7 +8,7 @@ import zipfile
 from PIL import Image
 import streamlit as st
 
-from l0_smoothing.interactive import DEFAULT_SAMPLE, PAPER_SOURCES, SOURCE_INFO, SAMPLES, compute
+from l0_smoothing.interactive import DEFAULT_SAMPLE, MODE_DEFAULTS, PAPER_SOURCES, SOURCE_INFO, TASK_SOURCES, SAMPLES, compute
 
 
 PARAMETER_HELP = {
@@ -61,6 +61,53 @@ def result_archive(result):
     return buffer.getvalue()
 
 
+def sync_parameter(source, target):
+    st.session_state[target] = st.session_state[source]
+
+
+def select_task_example():
+    st.session_state['sample'] = MODE_DEFAULTS[st.session_state['mode']]
+
+
+def parameter_input(label, minimum, maximum, default, step, key, format=None, disabled=False):
+    """滑块和数值框双向同步；回调在重新计算前更新共同参数。"""
+    entry_key = key + '_input'
+    st.session_state.setdefault(key, default)
+    st.session_state.setdefault(entry_key, st.session_state[key])
+    options = dict(min_value=minimum, max_value=maximum, step=step, help=PARAMETER_HELP[key], disabled=disabled)
+    if format is not None:
+        options['format'] = format
+    st.slider(label, key=key, on_change=sync_parameter, args=(key, entry_key), **options)
+    st.number_input(label + ' · 直接输入', key=entry_key,
+                    on_change=sync_parameter, args=(entry_key, key), **options)
+    return st.session_state[key]
+
+
+def sync_crop(key, source):
+    if source == 'slider':
+        st.session_state[key + '_start'], st.session_state[key + '_end'] = st.session_state[key]
+    else:
+        start, end = st.session_state[key + '_start'], st.session_state[key + '_end']
+        if start > end:
+            if source == 'start':
+                end = start
+            else:
+                start = end
+        st.session_state[key + '_start'], st.session_state[key + '_end'] = start, end
+        st.session_state[key] = (start, end)
+
+
+def crop_input(label, key):
+    st.session_state.setdefault(key, (25, 75))
+    st.session_state.setdefault(key + '_start', st.session_state[key][0])
+    st.session_state.setdefault(key + '_end', st.session_state[key][1])
+    st.slider(label, 0, 100, key=key, on_change=sync_crop, args=(key, 'slider'), help=PARAMETER_HELP[key])
+    for column, endpoint, suffix in zip(st.columns(2), ['start', 'end'], ['起点', '终点']):
+        column.number_input(label + ' · ' + suffix, 0, 100, key=key + '_' + endpoint,
+                            on_change=sync_crop, args=(key, endpoint), help=PARAMETER_HELP[key])
+    return st.session_state[key]
+
+
 def main():
     st.set_page_config(page_title='L0 结构平滑 · 现场计算', page_icon='🖼️', layout='wide')
     st.title('L0 梯度最小化 · 现场计算')
@@ -69,32 +116,41 @@ def main():
     with st.sidebar:
         st.header('输入与参数')
         st.caption('悬停参数旁的问号，可查看含义及调节后的预期变化。')
-        mode = labels[st.selectbox('任务', list(labels), key='mode',
-                                   help='结构平滑对比原图与平滑图；边缘提取对比两路同参数 Canny；JPEG 去伪影先生成压缩图再恢复。切换任务会改变计算流程和显示结果。')]
+        st.caption('参数可拖动滑块，也可直接输入数字后按 Enter；两者同步。')
+        mode = labels[st.selectbox('任务', list(labels), key='mode', on_change=select_task_example,
+                                   help='切换任务会选中对应示例，已上传的图片仍优先。结构平滑对比原图与结果；边缘提取对比两路同参数 Canny；JPEG 可直接恢复已有压缩图，或从参考图生成压缩输入。')]
         uploaded = st.file_uploader('上传自己的图片', type=['png', 'jpg', 'jpeg', 'bmp', 'webp', 'tif', 'tiff'],
                                     max_upload_size=8, key='upload',
                                     help='上传后替代内置样例，清除上传文件后恢复样例。JPEG 模式会把上传图当作参考图，再进行一次 JPEG 压缩。最长边超过 768 像素会缩小预览，原文件不变。')
+        st.session_state.setdefault('sample', DEFAULT_SAMPLE)
         sample = st.selectbox('内置样例', list(SAMPLES), format_func=lambda key: SAMPLES[key][0],
-                              index=list(SAMPLES).index(DEFAULT_SAMPLE),
                               disabled=uploaded is not None, key='sample',
-                              help='前两项是论文作者公开的海滩、岩石样例，保留原尺寸；其后为五张真实照片和人工插画。JPEG 模式以所选图为参考再次压缩，不代表原图完全没有噪声或压缩损失。')
+                              help='任务切换时会选中对应的公开示例。论文样例保留原尺寸；JPEG 压缩插画直接恢复，不再压缩。普通照片和人工插画也可用于生成压缩输入的定量实验。')
         if uploaded is None and sample in SOURCE_INFO:
             st.caption(SOURCE_INFO[sample]['note'])
         if uploaded is None and sample in PAPER_SOURCES:
             st.caption('论文样例按原尺寸计算；结构平滑模式同时显示作者 λ=0.02 的固定参考结果。')
         st.caption('上传图片仅用于本次计算；最长边超过 768 像素会缩小预览，原文件不修改。')
-        lam = st.slider('λ · 平滑强度', .0001, .1000, .0200, .0001, format='%.4f', key='lambda_',
-                        help=PARAMETER_HELP['lambda_'])
-        kappa = st.slider('κ · 惩罚增长率', 1.05, 4.00, 2.00, .05, key='kappa',
-                          help=PARAMETER_HELP['kappa'])
-        low, high, quality = 20, 40, 10
+        lam = parameter_input('λ · 平滑强度', .00001, .20000, .02000, .00001, 'lambda_', '%.5f')
+        kappa = parameter_input('κ · 惩罚增长率', 1.05, 4.00, 2.00, .01, 'kappa', '%.4f')
+        low, high, quality, jpeg_source = 20, 40, 10, 'simulate'
         if mode == 'edges':
-            low = st.slider('Canny 低阈值', 0, 255, 20, key='low', help=PARAMETER_HELP['low'])
-            high = st.slider('Canny 高阈值', 1, 255, 40, key='high', help=PARAMETER_HELP['high'])
+            low = parameter_input('Canny 低阈值', 0, 255, 20, 1, 'low')
+            high = parameter_input('Canny 高阈值', 1, 255, 40, 1, 'high')
             st.caption('原图与平滑图使用同一组检测参数。')
         elif mode == 'jpeg':
-            quality = st.slider('JPEG 质量', 1, 95, 10, key='quality', help=PARAMETER_HELP['quality'])
-            st.caption('将选定图片当作参考，现场生成 JPEG，再执行恢复。')
+            compressed_example = uploaded is None and TASK_SOURCES.get(sample, {}).get('kind') == 'jpeg_compressed'
+            if compressed_example:
+                jpeg_source = 'existing'
+            else:
+                jpeg_source = st.selectbox('JPEG 输入方式', ['simulate', 'existing'], key='jpeg_source',
+                    format_func=lambda value: {'simulate': '从参考图生成 JPEG', 'existing': '直接恢复已有压缩图'}[value],
+                    help='有参考图时可调节压缩质量并计算 PSNR／SSIM；已有压缩图直接进入恢复，不再次压缩，也不虚构参考原图。')
+            quality = parameter_input('JPEG 质量', 1, 95, 10, 1, 'quality', disabled=jpeg_source == 'existing')
+            if jpeg_source == 'existing':
+                st.caption('直接恢复输入图，质量参数不适用。没有压缩前原图，因此不计算 PSNR／SSIM。')
+            else:
+                st.caption('将选定图片当作参考，现场生成 JPEG，再执行恢复。')
         with st.expander('高级参数'):
             beta_max = st.number_input('β 最大值', 1.0, 100000.0, 100000.0, 1000.0, key='beta_max',
                                         help=PARAMETER_HELP['beta_max'])
@@ -105,7 +161,7 @@ def main():
 
     uploaded_bytes = uploaded.getvalue() if uploaded is not None else None
     payload = dict(mode=mode, sample=sample, lambda_=lam, kappa=kappa, beta_max=beta_max,
-                   low=low, high=high, quality=quality)
+                   low=low, high=high, quality=quality, jpeg_source=jpeg_source)
     fingerprint = hashlib.sha256(json.dumps(payload, sort_keys=True).encode() + (uploaded_bytes or b'')).hexdigest()
     changed = fingerprint != st.session_state.get('result_fingerprint')
     if run or (auto and changed):
@@ -130,8 +186,8 @@ def main():
     columns = st.columns(4)
     columns[0].metric('迭代次数', record['iterations'])
     columns[1].metric('算法耗时', f"{record['algorithm_seconds']:.3f} s")
-    columns[2].metric('λ', f"{record['parameters']['lambda_']:.4f}", help=PARAMETER_HELP['lambda_'])
-    columns[3].metric('κ', f"{record['parameters']['kappa']:.2f}", help=PARAMETER_HELP['kappa'])
+    columns[2].metric('λ', f"{record['parameters']['lambda_']:.5f}", help=PARAMETER_HELP['lambda_'])
+    columns[3].metric('κ', f"{record['parameters']['kappa']:.4f}", help=PARAMETER_HELP['kappa'])
     width, height = preprocessing['processed_size']
     st.caption(f"本次输入：{preprocessing['source']} · {width} × {height} · 实际计算次数：{st.session_state.compute_count}")
     if 'attribution' in preprocessing:
@@ -174,8 +230,8 @@ def main():
                 rows.append({'图像': name, 'PSNR / dB': '∞' if psnr == 'Infinity' else f'{psnr:.4f}', 'SSIM': f"{values['ssim']:.5f}"})
             st.table(rows)
     with st.expander('局部放大对照'):
-        x_range = st.slider('横向范围（%）', 0, 100, (25, 75), key='crop_x', help=PARAMETER_HELP['crop_x'])
-        y_range = st.slider('纵向范围（%）', 0, 100, (25, 75), key='crop_y', help=PARAMETER_HELP['crop_y'])
+        x_range = crop_input('横向范围（%）', 'crop_x')
+        y_range = crop_input('纵向范围（%）', 'crop_y')
         box = (width*x_range[0]//100, height*y_range[0]//100, width*x_range[1]//100, height*y_range[1]//100)
         if box[0] < box[2] and box[1] < box[3]:
             for column, item in zip(st.columns(len(result['panels'])), result['panels']):
@@ -187,6 +243,11 @@ def main():
                        file_name=f"l0_{record['mode']}_result.zip", mime='application/zip', on_click='ignore')
     with st.expander('查看本次运行记录'):
         st.json(record)
+    with st.expander('公开示例与其他实现'):
+        st.markdown('- [作者的边缘处理示例](https://jiaya.me/file/archive/projects/L0smoothing/EdgeEnhancement.htm)：展示梯度图，不等同于本页面的 Canny 二值边缘。\n'
+                    '- [作者的 Clip-art JPEG 示例](https://jiaya.me/file/archive/projects/L0smoothing/ClipArt.htm)：压缩输入及恢复结果，未提供对应无损真值。\n'
+                    '- [Berkeley 边缘检测数据集与评测](https://www2.eecs.berkeley.edu/Research/Projects/CS/vision/grouping/segbench/)：包含人工标注与其他算法的结果。\n'
+                    '- [Harvard CS205 团队的 L0 复现](https://github.com/ideafisher/l0-smoothing)：另一团队的串行／并行实现与展示。')
     st.caption('这里的参数变化会触发真实计算。查看局部和下载复用本次结果，不会重复计算。')
 
 

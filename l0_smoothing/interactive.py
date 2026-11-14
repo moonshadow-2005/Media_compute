@@ -24,9 +24,16 @@ PAPER_SOURCES = {
     item['key']: item
     for item in json.loads((PROJECT / 'data/paper_examples/sources.json').read_text(encoding='utf-8'))['images']
 }
-SOURCE_INFO = {**PAPER_SOURCES, **PHOTO_SOURCES}
+TASK_SOURCES = {
+    item['key']: item
+    for item in json.loads((PROJECT / 'data/task_examples/sources.json').read_text(encoding='utf-8'))['images']
+}
+SOURCE_INFO = {**PAPER_SOURCES, **PHOTO_SOURCES, **TASK_SOURCES}
 DEFAULT_SAMPLE = 'paper_beach'
+MODE_DEFAULTS = {'结构平滑': DEFAULT_SAMPLE, '边缘提取': 'edge_253036', 'JPEG 去伪影': 'jpeg_9'}
 SAMPLES = {
+    **{key: (item['label'], 'data/task_examples/' + item['file'], 'data/task_examples/' + item['file'])
+       for key, item in TASK_SOURCES.items()},
     **{key: (item['label'], 'data/paper_examples/' + item['file'], 'data/paper_examples/' + item['file'])
        for key, item in PAPER_SOURCES.items()},
     **{key: (item['label'], 'data/photos/' + item['file'], 'data/photos/' + item['file'])
@@ -75,8 +82,8 @@ def read_source(payload, mode, uploaded_bytes=None):
             raise ValueError('请使用 8 位灰度或彩色图片')
         oriented = ImageOps.exif_transpose(original)
         original_size = list(oriented.size)
-        # 两张已知大小的论文样例保留原尺寸，才能与作者公开结果逐像素比较。
-        if sample not in PAPER_SOURCES:
+        # 已知大小的论文样例保留原尺寸；上传图依旧限制预览尺寸。
+        if sample not in PAPER_SOURCES and sample not in TASK_SOURCES:
             oriented.thumbnail((MAX_SIDE, MAX_SIDE), Image.Resampling.LANCZOS)
         if oriented.mode == 'CMYK':
             oriented = oriented.convert('RGB')
@@ -116,9 +123,15 @@ def compute(payload, uploaded_bytes=None):
     quality = number(payload, 'quality', 10, 1, 95)
     if quality != int(quality):
         raise ValueError('JPEG 质量必须是整数')
+    task_source = TASK_SOURCES.get(payload.get('sample', DEFAULT_SAMPLE), {}) if uploaded_bytes is None else {}
+    jpeg_source = payload.get('jpeg_source', 'simulate')
+    if task_source.get('kind') == 'jpeg_compressed':
+        jpeg_source = 'existing'
+    if mode == 'jpeg' and jpeg_source not in ('simulate', 'existing'):
+        raise ValueError('未知 JPEG 输入方式')
     source, preprocessing = read_source(payload, mode, uploaded_bytes)
     clean = source
-    if mode == 'jpeg':
+    if mode == 'jpeg' and jpeg_source == 'simulate':
         encoded = io.BytesIO()
         Image.fromarray(to_uint8(clean)).save(encoded, format='JPEG', quality=int(quality),
                                             subsampling=0, optimize=False, progressive=False)
@@ -149,6 +162,14 @@ def compute(payload, uploaded_bytes=None):
         before, after = canny(source, low, high), canny(displayed, low, high)
         panels += [panel('原图边缘', before, 'edges_input.png'), panel('平滑后边缘', after, 'edges_smoothed.png')]
         metrics = {'input_edge_pixels': int(before.sum()), 'output_edge_pixels': int(after.sum())}
+    elif mode == 'jpeg' and jpeg_source == 'existing':
+        panels = [panel('已有压缩输入（未再次压缩）', source, 'compressed.png'),
+                  panel('L0 恢复结果', displayed, 'restored.png')]
+        metrics = {'note': '没有压缩前的参考原图，无法计算 PSNR／SSIM；作者恢复图也不是真值。'}
+        if task_source.get('reference'):
+            reference = task_source['reference']
+            reference_image = load_image(PROJECT / 'data/task_examples' / reference['file'])
+            panels.append(panel('作者恢复结果（参数未公开，仅供观察）', reference_image, 'author_restored.png'))
     elif mode == 'jpeg':
         panels = [panel('原图（压缩参考）', clean, 'clean.png'), panel('JPEG 压缩输入', source, 'compressed.png'),
                   panel('L0 恢复结果', displayed, 'restored.png')]
@@ -172,5 +193,8 @@ def compute(payload, uploaded_bytes=None):
     if reference_record is not None:
         metadata['author_reference'] = reference_record
     if mode == 'jpeg':
-        metadata['jpeg'] = dict(quality=int(quality), subsampling=0, optimize=False, progressive=False)
+        if jpeg_source == 'existing':
+            metadata['jpeg'] = dict(input_kind='existing', quality=None, recompressed=False)
+        else:
+            metadata['jpeg'] = dict(input_kind='simulate', quality=int(quality), subsampling=0, optimize=False, progressive=False)
     return {'panels': panels, 'metadata': metadata}
