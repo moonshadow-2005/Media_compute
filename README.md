@@ -145,8 +145,8 @@ explorer.exe "http://localhost:8501"
 按 `Ctrl+C` 停止服务；端口占用时用 `python3 main.py serve --port 8502`，然后打开对应端口。
 Streamlit 依赖固定为 1.57.0；页面、计算和图片处理都在本机进行，不需要云端部署。
 
-- 侧栏选择结构平滑、边缘提取或 JPEG 去伪影，使用内置样例或上传图片。
-- 边缘模式默认选作者的象群示例，也可选停车标志；JPEG 模式默认选作者的西瓜压缩图，也可选蜗牛。还提供外部 CC0 马剪贴画作为可控压缩参考，来源与使用方式见 [data/task_examples/README.md](data/task_examples/README.md)。
+- 侧栏选择结构平滑、边缘提取或 JPEG 去伪影，使用内置样例或上传图片。每个模式只列出本模式的样例，切换时自动选取对应默认图。
+- 边缘模式默认选作者的象群示例，也可选停车标志，页面另行加载作者的平滑图、原图梯度和平滑后梯度供对照；JPEG 模式默认选作者的西瓜压缩图，也可选蜗牛。还提供外部 CC0 马剪贴画作为可控压缩参考，来源与使用方式见 [data/task_examples/README.md](data/task_examples/README.md)。
 - 默认展示论文作者的海滩原图，可切换岩石原图；两张样例按原尺寸现场计算。结构平滑模式并排显示原图、本项目结果和作者 λ=0.02 的固定结果，并计算像素差异；来源及核对配置见 [data/paper_examples/README.md](data/paper_examples/README.md)。
 - 另外提供五张真实照片：咖啡杯、猫、宇航员、灰度摄影师和火箭发射。图片已随仓库提供，可离线使用；来源与许可见 [data/photos/README.md](data/photos/README.md)，页面及下载记录均保留来源。
 - λ、κ、Canny 阈值和 JPEG 质量均支持滑块与数值框双向同步；直接输入后按 Enter 生效，λ 支持五位小数。β 最大值和局部观察范围也可输入数字。可以关闭自动计算，调整好多个参数后点击“重新计算”。
@@ -172,4 +172,4 @@ python3 main.py demo --recompute --output results/live_demo
 `runs` 必须不存在。重算结果位于 `results/live_demo/runs`，不覆盖原有实验。
 测试中对完整独立重跑的 77 张图逐像素核对一致，两份指标 CSV 排除耗时后也完全一致。
 Demo 图片和指标绑定已通过 Node 执行页面脚本检查 37 组参数选择；未将该检查等同于浏览器截图验收。
-Streamlit 交互通过官方 AppTest 验证参数变化、手动计算、三种任务、图片上传与清除，并实际启动服务检查健康状态和主页；当前共 32 项测试通过。
+Streamlit 交互通过官方 AppTest 验证参数变化、手动计算、三种任务、图片上传与清除，并实际启动服务检查健康状态和主页；当前共 35 项测试通过。

@@ -45,6 +45,11 @@ SAMPLES = {
 }
 MAX_UPLOAD = 8 * 1024 * 1024
 MAX_SIDE = 768
+MODE_SAMPLES = {
+    'smooth': list(PAPER_SOURCES) + list(PHOTO_SOURCES) + ['color_landscape', 'gray_step', 'color_shapes'],
+    'edges': [key for key, item in TASK_SOURCES.items() if item['kind'] == 'edge_example'],
+    'jpeg': [key for key, item in TASK_SOURCES.items() if item['kind'] in ('jpeg_compressed', 'reference_clipart')] + ['line_art'],
+}
 
 
 def number(payload, key, default, low, high):
@@ -140,6 +145,8 @@ def compute(payload, uploaded_bytes=None):
     result = smooth(source, lambda_=lam, kappa=kappa, beta_max=beta_max)
     displayed = to_uint8(result.image).astype(np.float64) / 255.
     panels = [panel('输入图', source, 'input.png'), panel('L0 平滑结果', displayed, 'smoothed.png')]
+    author_panels = []
+    author_examples = []
     metrics = {}
     reference_record = None
     if mode == 'smooth' and uploaded_bytes is None and payload.get('sample', DEFAULT_SAMPLE) in PAPER_SOURCES:
@@ -162,6 +169,12 @@ def compute(payload, uploaded_bytes=None):
         before, after = canny(source, low, high), canny(displayed, low, high)
         panels += [panel('原图边缘', before, 'edges_input.png'), panel('平滑后边缘', after, 'edges_smoothed.png')]
         metrics = {'input_edge_pixels': int(before.sum()), 'output_edge_pixels': int(after.sum())}
+        for reference in task_source.get('edge_references', []):
+            reference_image = load_image(PROJECT / 'data/task_examples' / reference['file'])
+            if reference_image.shape[:2] != source.shape[:2]:
+                raise ValueError('作者边缘示例与输入尺寸不一致')
+            author_panels.append(panel(reference['title'], reference_image, reference['file']))
+            author_examples.append(dict(reference))
     elif mode == 'jpeg' and jpeg_source == 'existing':
         panels = [panel('已有压缩输入（未再次压缩）', source, 'compressed.png'),
                   panel('L0 恢复结果', displayed, 'restored.png')]
@@ -169,7 +182,8 @@ def compute(payload, uploaded_bytes=None):
         if task_source.get('reference'):
             reference = task_source['reference']
             reference_image = load_image(PROJECT / 'data/task_examples' / reference['file'])
-            panels.append(panel('作者恢复结果（参数未公开，仅供观察）', reference_image, 'author_restored.png'))
+            panels.append(panel('作者原有恢复结果（官网图片）', reference_image, 'author_restored.png'))
+            author_examples.append(dict(reference))
     elif mode == 'jpeg':
         panels = [panel('原图（压缩参考）', clean, 'clean.png'), panel('JPEG 压缩输入', source, 'compressed.png'),
                   panel('L0 恢复结果', displayed, 'restored.png')]
@@ -192,9 +206,11 @@ def compute(payload, uploaded_bytes=None):
         metadata['canny'] = dict(low=low, high=high, apertureSize=3, L2gradient=True)
     if reference_record is not None:
         metadata['author_reference'] = reference_record
+    if author_examples:
+        metadata['author_examples'] = author_examples
     if mode == 'jpeg':
         if jpeg_source == 'existing':
             metadata['jpeg'] = dict(input_kind='existing', quality=None, recompressed=False)
         else:
             metadata['jpeg'] = dict(input_kind='simulate', quality=int(quality), subsampling=0, optimize=False, progressive=False)
-    return {'panels': panels, 'metadata': metadata}
+    return {'panels': panels, 'author_panels': author_panels, 'metadata': metadata}

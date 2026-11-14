@@ -15,7 +15,27 @@
       "documentation_url": "https://jiaya.me/file/archive/projects/L0smoothing/EdgeEnhancement.htm",
       "source_url": "https://jiaya.me/file/archive/projects/L0smoothing/results/EdgeEnhancement/253036.jpg",
       "sha256": "7a54cba62c89a3e4042c000d9f9333f940e5f7c88e18a11e88a6ea5cf771796a",
-      "note": "观察草地纹理消除后象群和树的轮廓。作者网页展示梯度图，本页面使用相同参数的 Canny 对照。"
+      "note": "观察草地纹理消除后象群和树的轮廓。作者网页展示梯度图，本页面使用相同参数的 Canny 对照。 页面另载入作者平滑结果、原图梯度和平滑后梯度，保持固定以供比较。",
+      "edge_references": [
+        {
+          "file": "author_253036_0.04_S.png",
+          "title": "作者平滑结果（λ=0.04）",
+          "source_url": "https://jiaya.me/file/archive/projects/L0smoothing/results/EdgeEnhancement/253036_0.04_S.png",
+          "sha256": "a57741f42674ab2e196f33cf48ead2080166b3434648c1e08beaabfe74fe3e9b"
+        },
+        {
+          "file": "author_253036_0.04_GO_.png",
+          "title": "作者原图梯度",
+          "source_url": "https://jiaya.me/file/archive/projects/L0smoothing/results/EdgeEnhancement/253036_0.04_GO_.png",
+          "sha256": "f7d0dffd2bdec26824f1a95d449cece824f79e72fba6a04316e99245ee5a5038"
+        },
+        {
+          "file": "author_253036_0.04_G_.png",
+          "title": "作者平滑后梯度",
+          "source_url": "https://jiaya.me/file/archive/projects/L0smoothing/results/EdgeEnhancement/253036_0.04_G_.png",
+          "sha256": "f7a8f79d478eaff76a6cdd93a628f86a1e44ba000d385d20b35e1d3d44692e8d"
+        }
+      ]
     },
     {
       "key": "edge_stop",
@@ -31,7 +51,27 @@
       "documentation_url": "https://jiaya.me/file/archive/projects/L0smoothing/EdgeEnhancement.htm",
       "source_url": "https://jiaya.me/file/archive/projects/L0smoothing/results/EdgeEnhancement/stop.png",
       "sha256": "deda7750b0dc04f6282cc8a32cf5ff307c7f0d29b0525e7a6b86c26f4a6a71e2",
-      "note": "观察背景纹理与标志边界。作者梯度图不等同于 Canny 二值边缘。"
+      "note": "观察背景纹理与标志边界。作者梯度图不等同于 Canny 二值边缘。 页面另载入作者平滑结果、原图梯度和平滑后梯度，保持固定以供比较。",
+      "edge_references": [
+        {
+          "file": "author_stop_5e-2_1.05.png",
+          "title": "作者平滑结果（λ=0.05，κ=1.05）",
+          "source_url": "https://jiaya.me/file/archive/projects/L0smoothing/results/EdgeEnhancement/stop_5e-2_1.05.png",
+          "sha256": "ea95cf2f5f4ab66a1ca20f6488ce3b66d9c240edec1b24a40a9d9e5454eeffed"
+        },
+        {
+          "file": "author_stop_GO_.png",
+          "title": "作者原图梯度",
+          "source_url": "https://jiaya.me/file/archive/projects/L0smoothing/results/EdgeEnhancement/stop_GO_.png",
+          "sha256": "e143e054917ee5f3402022c11c87a4470df1dd399353d90a1f7ea9b7a76f11b8"
+        },
+        {
+          "file": "author_stop_5e-2_1.05_G_.png",
+          "title": "作者平滑后梯度",
+          "source_url": "https://jiaya.me/file/archive/projects/L0smoothing/results/EdgeEnhancement/stop_5e-2_1.05_G_.png",
+          "sha256": "255c26053cb71bbd7f0f4dc7a4f4ca39c0b64c75fee6f794b6d5238216050be7"
+        }
+      ]
     },
     {
       "key": "jpeg_9",

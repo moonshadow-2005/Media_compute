@@ -8,7 +8,7 @@ import zipfile
 from PIL import Image
 import streamlit as st
 
-from l0_smoothing.interactive import DEFAULT_SAMPLE, MODE_DEFAULTS, PAPER_SOURCES, SOURCE_INFO, TASK_SOURCES, SAMPLES, compute
+from l0_smoothing.interactive import DEFAULT_SAMPLE, MODE_DEFAULTS, MODE_SAMPLES, PAPER_SOURCES, SOURCE_INFO, TASK_SOURCES, SAMPLES, compute
 
 
 PARAMETER_HELP = {
@@ -55,7 +55,7 @@ PARAMETER_HELP = {
 def result_archive(result):
     buffer = io.BytesIO()
     with zipfile.ZipFile(buffer, 'w', zipfile.ZIP_DEFLATED) as archive:
-        for item in result['panels']:
+        for item in result['panels'] + result.get('author_panels', []):
             archive.writestr(item['filename'], item['image'])
         archive.writestr('parameters.json', json.dumps(result['metadata'], ensure_ascii=False, indent=2, allow_nan=False))
     return buffer.getvalue()
@@ -123,9 +123,12 @@ def main():
                                     max_upload_size=8, key='upload',
                                     help='上传后替代内置样例，清除上传文件后恢复样例。JPEG 模式会把上传图当作参考图，再进行一次 JPEG 压缩。最长边超过 768 像素会缩小预览，原文件不变。')
         st.session_state.setdefault('sample', DEFAULT_SAMPLE)
-        sample = st.selectbox('内置样例', list(SAMPLES), format_func=lambda key: SAMPLES[key][0],
+        sample_options = MODE_SAMPLES[mode]
+        if st.session_state['sample'] not in sample_options:
+            st.session_state['sample'] = MODE_DEFAULTS[st.session_state['mode']]
+        sample = st.selectbox('内置样例', sample_options, format_func=lambda key: SAMPLES[key][0],
                               disabled=uploaded is not None, key='sample',
-                              help='任务切换时会选中对应的公开示例。论文样例保留原尺寸；JPEG 压缩插画直接恢复，不再压缩。普通照片和人工插画也可用于生成压缩输入的定量实验。')
+                              help='只列出当前任务对应的样例，切换任务时选择该模式的默认图。论文样例保留原尺寸；JPEG 压缩插画直接恢复，参考剪贴画用于生成压缩输入。各模式均可上传自己的图片。')
         if uploaded is None and sample in SOURCE_INFO:
             st.caption(SOURCE_INFO[sample]['note'])
         if uploaded is None and sample in PAPER_SOURCES:
@@ -197,10 +200,24 @@ def main():
     if preprocessing['resized']:
         original_w, original_h = preprocessing['original_size']
         st.info(f'交互预览从 {original_w} × {original_h} 缩小至 {width} × {height}；全尺寸计算可使用命令行 smooth。')
+    author_panels = result.get('author_panels', [])
+    if author_panels:
+        st.subheader('我们的现场计算结果')
+    elif record['mode'] == 'jpeg' and record.get('author_examples'):
+        st.subheader('压缩输入 · 我们的现场恢复 · 作者原有结果')
+        st.caption('第三列已载入作者官网的恢复 PNG，保持固定；作者未公开逐图参数，该图仅供效果比较，不是无损真值。')
     for column, item in zip(st.columns(len(result['panels'])), result['panels']):
         with column:
             st.subheader(item['title'])
             st.image(item['image'], width='stretch')
+
+    if author_panels:
+        st.subheader('作者原有结果（官网图片）')
+        st.caption('以下三图直接读取作者官网公开文件。作者展示的是梯度图，我们展示的是 Canny 二值边缘；两者用于观察效果，不作逐像素一致性判断。修改参数只改变我们的现场结果。')
+        for column, item in zip(st.columns(len(author_panels)), author_panels):
+            with column:
+                st.markdown('**' + item['title'] + '**')
+                st.image(item['image'], width='stretch')
 
     if 'author_reference' in record:
         reference = record['author_reference']
@@ -237,6 +254,11 @@ def main():
             for column, item in zip(st.columns(len(result['panels'])), result['panels']):
                 with Image.open(io.BytesIO(item['image'])) as image:
                     column.image(image.crop(box), caption=item['title'], width='stretch')
+            if author_panels:
+                st.caption('作者原有结果：相同区域的局部对照')
+                for column, item in zip(st.columns(len(author_panels)), author_panels):
+                    with Image.open(io.BytesIO(item['image'])) as image:
+                        column.image(image.crop(box), caption=item['title'], width='stretch')
         else:
             st.info('请选择非空的观察范围。')
     st.download_button('下载本次结果与参数', data=result_archive(result),

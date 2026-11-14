@@ -9,7 +9,7 @@ from streamlit.testing.v1 import AppTest
 
 from l0_smoothing.core import smooth
 from l0_smoothing.image_io import load_image, to_uint8
-from l0_smoothing.interactive import DEFAULT_SAMPLE, PAPER_SOURCES, SOURCE_INFO, TASK_SOURCES, PROJECT, compute
+from l0_smoothing.interactive import DEFAULT_SAMPLE, MODE_SAMPLES, PAPER_SOURCES, SOURCE_INFO, TASK_SOURCES, PROJECT, SAMPLES, compute
 from l0_smoothing.streamlit_app import result_archive
 
 
@@ -172,7 +172,7 @@ def test_existing_jpeg_is_not_recompressed_or_treated_as_ground_truth(sample):
 
 def test_numeric_entry_syncs_slider_manual_calculation_and_crop():
     app = start_app()
-    app.selectbox(key='sample').set_value('line_art').run()
+    app.selectbox(key='sample').set_value('gray_step').run()
     app.checkbox(key='auto').uncheck().run()
     count = app.session_state['compute_count']
     app.number_input(key='lambda__input').set_value(.00317).run()
@@ -214,3 +214,45 @@ def test_numeric_canny_and_quality_inputs_reach_computation():
     app.selectbox(key='jpeg_source').set_value('existing').run()
     assert app.number_input(key='quality_input').disabled
     assert app.session_state['result']['metadata']['jpeg']['recompressed'] is False
+
+
+@pytest.mark.parametrize('sample', ['edge_253036', 'edge_stop'])
+def test_edge_author_files_are_displayed_and_exported_without_recomputation(sample):
+    result = compute({'mode': 'edges', 'sample': sample})
+    assert len(result['author_panels']) == 3
+    references = TASK_SOURCES[sample]['edge_references']
+    assert result['metadata']['author_examples'] == references
+    for item, reference in zip(result['author_panels'], references):
+        expected = load_image(PROJECT/'data/task_examples'/reference['file'])
+        actual = np.asarray(Image.open(io.BytesIO(item['image'])))
+        np.testing.assert_array_equal(actual, to_uint8(expected))
+    changed = compute({'mode': 'edges', 'sample': sample, 'lambda_': .01})
+    assert changed['panels'][1]['image'] != result['panels'][1]['image']
+    assert changed['author_panels'] == result['author_panels']
+    with zipfile.ZipFile(io.BytesIO(result_archive(result))) as archive:
+        for item in result['author_panels']:
+            assert archive.read(item['filename']) == item['image']
+    stream = io.BytesIO()
+    Image.new('RGB', (24, 24), (80, 80, 80)).save(stream, format='PNG')
+    uploaded = compute({'mode': 'edges', 'sample': sample}, stream.getvalue())
+    assert not uploaded['author_panels']
+    assert 'author_examples' not in uploaded['metadata']
+
+
+def test_page_explicitly_labels_loaded_author_results():
+    app = start_app()
+    assert app.selectbox(key='sample').options == [SAMPLES[key][0] for key in MODE_SAMPLES['smooth']]
+    app.selectbox(key='mode').set_value('边缘提取').run()
+    assert app.selectbox(key='sample').options == [SAMPLES[key][0] for key in MODE_SAMPLES['edges']]
+    assert not app.exception
+    assert any('作者原有结果（官网图片）' in title.value for title in app.subheader)
+    assert len(app.session_state['result']['author_panels']) == 3
+    app.selectbox(key='mode').set_value('JPEG 去伪影').run()
+    assert app.selectbox(key='sample').options == [SAMPLES[key][0] for key in MODE_SAMPLES['jpeg']]
+    assert not app.exception
+    assert any('我们的现场恢复 · 作者原有结果' in title.value for title in app.subheader)
+    assert app.session_state['result']['panels'][2]['filename'] == 'author_restored.png'
+    app.selectbox(key='mode').set_value('结构平滑').run()
+    assert not app.exception and app.selectbox(key='sample').value == DEFAULT_SAMPLE
+    assert app.selectbox(key='sample').options == [SAMPLES[key][0] for key in MODE_SAMPLES['smooth']]
+    assert len(set(sum(MODE_SAMPLES.values(), []))) == sum(map(len, MODE_SAMPLES.values()))
